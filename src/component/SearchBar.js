@@ -28,8 +28,8 @@ const Input = styled.input`
 
 const Button = styled.button`
   padding: 8px 16px;
-  background-color: #3182f6;
-  color: white;
+  background-color: white;
+  color: gray;
   border: none;
   border-radius: 4px;
   font-size: 16px;

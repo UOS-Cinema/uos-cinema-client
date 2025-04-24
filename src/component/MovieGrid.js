@@ -1,7 +1,6 @@
-// 기존 import들 유지
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { movies } from '../../example_data/movies';
+import { movies } from '../example_data/movies';
 
 // 스타일 컴포넌트
 const Grid = styled.div`
@@ -54,7 +53,7 @@ const ButtonGroup = styled.div`
   display: flex;
   justify-content: space-around;
   padding: 12px;
-  background-color: #f9f9f9;
+  background-color: white;
 `;
 
 const ReservationBtn = styled.button`
@@ -62,7 +61,7 @@ const ReservationBtn = styled.button`
   font-size: 14px;
   border: none;
   border-radius: 6px;
-  background-color: #0077cc;
+  background-color: #1E6DFF;
   color: white;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -77,9 +76,12 @@ const ReservationBtn = styled.button`
 `;
 
 const MovieGrid = () => {
+  // 최대 5개 항목만 표시
+  const displayedMovies = movies.slice(0, 5);
+
   return (
     <Grid>
-      {movies.map((movie) => (
+      {displayedMovies.map((movie) => (
         <MovieCard key={movie.id}>
           <StyledLink to={`/movie/${movie.id}`}>
             <Poster src={movie.poster} alt={movie.title} />
@@ -91,13 +93,12 @@ const MovieGrid = () => {
             </Info>
           </StyledLink>
           <ButtonGroup>
-          <StyledLink to={`/reservation/${movie.id}`}>
+            <StyledLink to={`/reservation/${movie.id}`}>
               <ReservationBtn>예매하기</ReservationBtn>
             </StyledLink>
             <StyledLink to={`/movie/${movie.id}`}>
               <ReservationBtn>상세보기</ReservationBtn>
             </StyledLink>
-            
           </ButtonGroup>
         </MovieCard>
       ))}

@@ -2,16 +2,45 @@ import { Link, useParams } from 'react-router-dom';
 import Navbar from './NavBar';
 import styled from 'styled-components';
 import { movies } from '../example_data/movies';
+import SearchBar from './SearchBar';
+import age15 from '../asset/age15.png';
+import director from '../asset/director.jpg';
+import actor1 from '../asset/actor1.jpg';
+import actor2 from '../asset/actor2.jpg';
+import actor3 from '../asset/actor3.jpg';
+
+const Poster = styled.img`
+    width: 300px;
+    height: 500px;
+`;
+
+const CardImg = styled.img`
+    width:100px;
+    height:130px;
+    border-radius:10px;
+`;
+const AgeImg = styled.img`
+    width: 40px;
+    height: 40px;
+`;
+
+const StyledLine = styled.div`
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    text-align: center;
+    font-size: 32px;
+`;
 
 const Info = styled.div`
     display: flex;
-    flex: 1;
     justify-content: center;
     flex-direction: row;
-    width:70%;
-    margin-left:15%;
-    margin-top:30px;
+    width: 70%;
+    margin-left: 15%;
+    margin-top: 30px;
 `;
+
 const StyledLink = styled(Link)`
   text-decoration: none;   // 밑줄 제거
   color: inherit;          // 부모 요소의 글자색 상속
@@ -20,30 +49,86 @@ const StyledLink = styled(Link)`
     color: inherit;        // 방문한 링크도 동일한 색
   }
 `;
-const Container = styled.div`
-    
+
+const Container = styled.div``;
+const CardContainer = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
 `;
+
+const Card = styled.div`
+    background-color: #fff;
+    border-radius: 8px;
+    border:1px solid rgba(0, 0, 0, 0.1);    
+    padding-top: 10px;
+    width: 120px;
+    height:170px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+`;
+
 const MovieDetail = () => {
     const { id } = useParams();
     const movie = movies.find((movie) => movie.id === parseInt(id));
     if (!movie) {
         return <p>영화를 찾을 수 없습니다.</p>;
     }
+
     return (
         <Container>
-            <Navbar></Navbar>
+            <Navbar />
+            <SearchBar />
             <Info>
-                <img src={movie.poster} alt={movie.title} />
+                <Poster src={movie.poster} alt={movie.title} />
                 <div>
-                    <h1>{movie.title}</h1>
-                    <p>감독: {movie.director}</p>
-                    <p>배우: {movie.actors}</p>
-                    <p>영화등급: {movie.class}</p>
-                    <p>러닝 타임: {movie.runningTime}분</p>
+                    <StyledLine>
+                        <AgeImg src={age15} /> {movie.title}
+                    </StyledLine>
+                    <p>{movie.genre} · {movie.runningTime}분 · {movie.distributor}</p>
                     <p>개봉일: {movie.releaseDate}</p>
-                    <p>장르: {movie.genre}</p>
-                    <p>배급사: {movie.distributor}</p>
-                    <p>줄거리: {movie.plot}</p>
+                    <p>{movie.plot}</p>
+                    <CardContainer>
+                        <Card>
+                            <CardImg src={director} alt="director" />
+                            <div>{movie.director}</div>
+                            <div>감독</div>
+                        </Card>
+                        <Card>
+                            <CardImg src={actor1} alt="actor1" />
+                            <div>{movie.actors[0]}</div>
+                            <div>주연</div>
+                        </Card>
+                        <Card>
+                            <CardImg src={actor2} alt="actor2" />
+                            <div>{movie.actors[1]}</div>
+                            <div>주연</div>
+                        </Card>
+                        <Card>
+                            <CardImg src={actor3} alt="actor3" />
+                            <div>{movie.actors[2]}</div>
+                            <div>주연</div>
+                        </Card>
+                        <Card>
+                            <CardImg src={actor3} alt="actor3" />
+                            <div>{movie.actors[2]}</div>
+                            <div>주연</div>
+                        </Card>
+                        <Card>
+                            <CardImg src={actor3} alt="actor3" />
+                            <div>{movie.actors[2]}</div>
+                            <div>주연</div>
+                        </Card>
+                        <Card>
+                            <CardImg src={actor3} alt="actor3" />
+                            <div>{movie.actors[2]}</div>
+                            <div>주연</div>
+                        </Card>
+                    </CardContainer>
                 </div>
             </Info>
             <StyledLink to={`/reservation/${movie.id}`}>

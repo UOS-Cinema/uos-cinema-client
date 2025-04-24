@@ -1,61 +1,83 @@
 import React from 'react';
 import styled from 'styled-components';
 import logo from '../asset/logo.svg';
+import { Link } from 'react-router-dom';
+
 const NavbarContainer = styled.nav`
-  border-bottom: 1px solid #ccc;
-  padding: 10px;
+  
+  padding: 10px 10%;
   display: flex;
-  flex-direction:column;
   justify-content: space-between;
   align-items: center;
+  border-bottom:2px solid #1E6DFF;
 `;
-
-const Logo = styled.div`
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #ff4757;
-    
-    width:500px;
-    text-align: center;
-`;
-
 const Menu = styled.ul`
-    width:500px;
-    display: flex;
-    justify-content:space-between;
-    list-style: none;
-    align-items: center;
-    border-top: 2px solid #ccc;
-    padding-top:10px;
-
+  display: flex;
+  list-style: none;
+  align-items: center;
+  margin: 0;
+  padding: 0;
 `;
 
 const MenuItem = styled.li`
-    width:100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  height: 30px;
+
+  text-align: center;
   cursor: pointer;
   transition: color 0.2s ease;
+
+  border-right: 1px solid #ccc;
+
+  &:first-child {
+    border-left: 1px solid #ccc;
+  }
 
   &:hover {
     color: #ff4757;
   }
 `;
-const Header = styled.div`
-  justify-content:row;
+
+
+const StyledLink = styled(Link)`
+ display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+
+  &:visited {
+    color: inherit;
+  }
 `;
+
 const Navbar = () => {
   return (
     <NavbarContainer>
-      <Header>
-        <img src={logo} />
-      </Header>
+      <Link to="/">
+        <img src={logo} alt="logo" />
+      </Link>
+
 
       <Menu>
-        <MenuItem>영화</MenuItem>
-        <MenuItem>예매</MenuItem>
-        <MenuItem>로그인</MenuItem>
-        <MenuItem>회원가입</MenuItem>
-        <MenuItem>마이페이지</MenuItem>
+        <MenuItem>
+          <StyledLink to="/movieChart">영화</StyledLink>
+        </MenuItem>
+        <MenuItem>
+          <StyledLink to="/reservation">예매</StyledLink>
+        </MenuItem>
+        <MenuItem>
+          <StyledLink to="/login">로그인</StyledLink>
+        </MenuItem>
+        <MenuItem>
+          <StyledLink to="/signup">회원가입</StyledLink>
+        </MenuItem>
+        <MenuItem>
+          <StyledLink to="/mypage">마이페이지</StyledLink>
+        </MenuItem>
       </Menu>
     </NavbarContainer>
   );

@@ -9,7 +9,7 @@ const topMovie = movies.reduce((prev, curr) =>
 
 const BannerContainer = styled.div`
   width: 100%;
-  max-width: 1200px;
+  
   margin: 0 auto;
   position: relative;
   border-radius: 12px;
@@ -57,5 +57,6 @@ function TopReservationBanner() {
     </BannerContainer>
   );
 }
+
 
 export default TopReservationBanner;
