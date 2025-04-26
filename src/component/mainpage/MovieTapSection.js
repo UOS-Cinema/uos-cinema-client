@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import MovieGrid from './MovieGrid';
+import { Link } from 'react-router-dom';
 
 const TabContainer = styled.div`
   display: flex;
@@ -48,6 +49,15 @@ const ViewAllButton = styled.button`
   }
 `;
 
+const StyledLink = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+
+  &:visited {
+    color: inherit;
+  }
+`;
+
 const MovieTabSection = () => {
   const [activeTab, setActiveTab] = useState('chart');
 
@@ -63,7 +73,7 @@ const MovieTabSection = () => {
           </Tab>
         </TabList>
 
-        <ViewAllButton>전체보기</ViewAllButton>
+        <ViewAllButton><StyledLink to={`/moviechart`}>전체보기</StyledLink></ViewAllButton>
       </TabContainer>
 
       {activeTab === 'chart' ? <MovieGrid /> : <MovieGrid />}

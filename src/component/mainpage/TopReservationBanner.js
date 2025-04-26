@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { movies } from '../example_data/movies';
+import { movies } from '../../example_data/movies';
 
 // 예매율이 가장 높은 영화 찾기
 const topMovie = movies.reduce((prev, curr) =>

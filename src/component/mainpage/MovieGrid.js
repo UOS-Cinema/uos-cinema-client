@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { movies } from '../example_data/movies';
+import { movies } from '../../example_data/movies';
 
 // 스타일 컴포넌트
 const Grid = styled.div`

@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
-import Navbar from './NavBar';
+import Navbar from '../component/common/NavBar';
 import styled from 'styled-components';
 import { movies } from '../example_data/movies';
-import SearchBar from './SearchBar';
+import SearchBar from '../component/common/SearchBar';
 import age15 from '../asset/age15.png';
 import director from '../asset/director.jpg';
 import actor1 from '../asset/actor1.jpg';
@@ -72,7 +72,7 @@ const Card = styled.div`
     text-align: center;
 `;
 
-const MovieDetail = () => {
+const MovieDetailPage = () => {
     const { id } = useParams();
     const movie = movies.find((movie) => movie.id === parseInt(id));
     if (!movie) {
@@ -138,4 +138,4 @@ const MovieDetail = () => {
     );
 };
 
-export default MovieDetail;
+export default MovieDetailPage;

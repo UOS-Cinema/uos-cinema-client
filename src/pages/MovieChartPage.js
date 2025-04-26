@@ -1,6 +1,6 @@
-import Navbar from "../../component/NavBar";
-import SearchBar from "../../component/SearchBar";
-import MovieGrid from "../../component/MovieGrid";
+import Navbar from "../component/common/NavBar";
+import SearchBar from "../component/common/SearchBar";
+import MovieGrid from "../component/mainpage/MovieGrid";
 const MovieChartPage = () => {
     return (
         <div>

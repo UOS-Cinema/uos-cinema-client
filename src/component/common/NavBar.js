@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import logo from '../asset/logo.svg';
+import logo from '../../asset/logo.svg';
 import { Link } from 'react-router-dom';
 
 const NavbarContainer = styled.nav`
@@ -71,9 +71,6 @@ const Navbar = () => {
         </MenuItem>
         <MenuItem>
           <StyledLink to="/login">로그인</StyledLink>
-        </MenuItem>
-        <MenuItem>
-          <StyledLink to="/signup">회원가입</StyledLink>
         </MenuItem>
         <MenuItem>
           <StyledLink to="/mypage">마이페이지</StyledLink>
