@@ -93,7 +93,7 @@ const MovieGrid = () => {
             </Info>
           </StyledLink>
           <ButtonGroup>
-            <StyledLink to={`/reservation/${movie.id}`}>
+            <StyledLink to={`/reservation`}>
               <ReservationBtn>예매하기</ReservationBtn>
             </StyledLink>
             <StyledLink to={`/movie/${movie.id}`}>

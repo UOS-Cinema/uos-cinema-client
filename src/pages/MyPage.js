@@ -4,29 +4,35 @@ import Navbar from "../component/common/NavBar";
 import TicketList from "../component/mypage/TicketList";
 import PointInfo from "../component/mypage/PointInfo";
 import MemberInfo from "../component/mypage/MemberInfo";
+import PaymentList from "../component/mypage/PaymentList";
 const MyPage = () => {
   const [tab, setTab] = useState("ticket");
-  
+
 
   const renderContent = () => {
     if (tab === "ticket") {
-      return (<TicketList/>);
+      return (<TicketList />);
     }
-    else if (tab === "point"){
-        return (<PointInfo/>)
+    else if (tab === "payment") {
+      return (<PaymentList />)
     }
-    else if (tab === "info"){
-        return (<MemberInfo/>)
+    else if (tab === "point") {
+      return (<PointInfo />)
     }
+    else if (tab === "info") {
+      return (<MemberInfo />)
+    }
+    
     return null;
   };
 
   return (
     <div>
-      <Navbar />
+      <Navbar underline={true}/>
       <Container>
         <TabContainer>
           <Tab selected={tab === "ticket"} onClick={() => setTab("ticket")}>MY 티켓</Tab>
+          <Tab selected={tab === "payment"} onClick={() => setTab("payment")}>결제내역</Tab>
           <Tab selected={tab === "point"} onClick={() => setTab("point")}>포인트</Tab>
           <Tab selected={tab === "info"} onClick={() => setTab("info")}>회원정보 수정</Tab>
         </TabContainer>

@@ -4,7 +4,7 @@ import MovieGrid from "../component/mainpage/MovieGrid";
 const MovieChartPage = () => {
     return (
         <div>
-            <Navbar></Navbar>
+            <Navbar underline={true}></Navbar>
             <SearchBar></SearchBar>
             <MovieGrid></MovieGrid>
         </div>

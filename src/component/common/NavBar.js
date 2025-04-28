@@ -9,7 +9,7 @@ const NavbarContainer = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom:2px solid #1E6DFF;
+  border-bottom: ${({ underline }) => (underline ? '2px solid #1E6DFF' : 'none')};
 `;
 const Menu = styled.ul`
   display: flex;
@@ -54,9 +54,9 @@ const StyledLink = styled(Link)`
   }
 `;
 
-const Navbar = () => {
+const Navbar = ({underline}) => {
   return (
-    <NavbarContainer>
+    <NavbarContainer underline={underline}>
       <Link to="/">
         <img src={logo} alt="logo" />
       </Link>

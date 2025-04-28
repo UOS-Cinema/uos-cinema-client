@@ -12,6 +12,7 @@ import actor3 from '../asset/actor3.jpg';
 const Poster = styled.img`
     width: 300px;
     height: 500px;
+    margin:30px;
 `;
 
 const CardImg = styled.img`
@@ -52,11 +53,12 @@ const StyledLink = styled(Link)`
 
 const Container = styled.div``;
 const CardContainer = styled.div`
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
-    margin-top: 20px;
-    width: 100%;
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-start; /* 왼쪽 정렬 */
 `;
 
 const Card = styled.div`
@@ -81,7 +83,7 @@ const MovieDetailPage = () => {
 
     return (
         <Container>
-            <Navbar />
+            <Navbar underline={true} />
             <SearchBar />
             <Info>
                 <Poster src={movie.poster} alt={movie.title} />
@@ -92,41 +94,36 @@ const MovieDetailPage = () => {
                     <p>{movie.genre} · {movie.runningTime}분 · {movie.distributor}</p>
                     <p>개봉일: {movie.releaseDate}</p>
                     <p>{movie.plot}</p>
+                    <h3>감독</h3>
                     <CardContainer>
+
                         <Card>
                             <CardImg src={director} alt="director" />
                             <div>{movie.director}</div>
                             <div>감독</div>
                         </Card>
+                    </CardContainer>
+                    <h3>주연</h3>
+                    <CardContainer>
+
                         <Card>
-                            <CardImg src={actor1} alt="actor1" />
+                            <CardImg src={actor1} />
                             <div>{movie.actors[0]}</div>
-                            <div>주연</div>
+                            <div>오대수 역</div>
                         </Card>
                         <Card>
-                            <CardImg src={actor2} alt="actor2" />
+                            <CardImg src={actor2} />
                             <div>{movie.actors[1]}</div>
-                            <div>주연</div>
+                            <div>이우진 역</div>
                         </Card>
+                    </CardContainer>
+                    <h3>조연</h3>
+                    <CardContainer>
+
                         <Card>
-                            <CardImg src={actor3} alt="actor3" />
+                            <CardImg src={actor3} />
                             <div>{movie.actors[2]}</div>
-                            <div>주연</div>
-                        </Card>
-                        <Card>
-                            <CardImg src={actor3} alt="actor3" />
-                            <div>{movie.actors[2]}</div>
-                            <div>주연</div>
-                        </Card>
-                        <Card>
-                            <CardImg src={actor3} alt="actor3" />
-                            <div>{movie.actors[2]}</div>
-                            <div>주연</div>
-                        </Card>
-                        <Card>
-                            <CardImg src={actor3} alt="actor3" />
-                            <div>{movie.actors[2]}</div>
-                            <div>주연</div>
+                            <div>미도 역</div>
                         </Card>
                     </CardContainer>
                 </div>

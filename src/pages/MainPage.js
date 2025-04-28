@@ -5,7 +5,7 @@ import TopReservationBanner from "../component/mainpage/TopReservationBanner";
 const MainPage = () => {
     return (
         <div>
-            <Navbar></Navbar>
+            <Navbar underline={true}></Navbar>
             <TopReservationBanner/>
             
             <SearchBar></SearchBar>

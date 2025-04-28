@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import Navbar from "../component/common/NavBar";
+import { Link } from "react-router-dom";
 
 const LoginPage = () => {
     const [activeMainTab, setActiveMainTab] = useState("member"); // "member" or "guest"
@@ -8,7 +9,7 @@ const LoginPage = () => {
 
     return (
         <Container>
-            <Navbar />
+            <Navbar underline={true}/>
             <LoginContainer>
                 {/* 메인 탭 */}
                 <TabMenu>
@@ -42,7 +43,7 @@ const LoginPage = () => {
 
                             {/* 회원가입/아이디찾기 버튼 추가 */}
                             <LinkButtonWrapper>
-                                <LinkButton>회원가입하기</LinkButton>
+                                <LinkButton><StyledLink to="/signup">회원가입하기</StyledLink></LinkButton>
                                 <LinkButton>아이디/비밀번호 찾기</LinkButton>
                             </LinkButtonWrapper>
                         </>
@@ -165,7 +166,10 @@ const DateSelectWrapper = styled.div`
   justify-content: space-between;
   margin-bottom: 14px;
 `;
-
+const StyledLink = styled(Link)`
+  text-decoration: none;
+  color: inherit; /* 글자 색도 기본 상속받게 */
+`;
 const Select = styled.select`
   flex: 1;
   padding: 10px;
