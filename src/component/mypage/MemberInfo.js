@@ -7,6 +7,7 @@ const MemberInfo = () => {
     name: "홍길동",
     id: "hong123",
     phone: "010-1234-5678",
+    birth: "1990-01-01",
   };
 
   return (
@@ -18,24 +19,29 @@ const MemberInfo = () => {
       <InfoSection>
         <InfoRow>
           <Label>이름</Label>
-          <Value>{memberData.name}</Value>
+          <Value>
+            {memberData.name}
+            <ChangeButton>변경</ChangeButton>
+          </Value>
         </InfoRow>
         <InfoRow>
           <Label>아이디</Label>
           <Value>{memberData.id}</Value>
         </InfoRow>
         <InfoRow>
-          <Label>휴대폰 번호</Label>
+          <Label>생년월일</Label>
           <Value>
-            {memberData.phone}
+            {memberData.birth}
             <ChangeButton>변경</ChangeButton>
           </Value>
         </InfoRow>
         <InfoRow>
+          <Label>휴대폰 번호</Label>
+          <Value>{memberData.phone}</Value>
+        </InfoRow>
+        <InfoRow>
           <Label>비밀번호</Label>
-          <Value>
-            <ChangeButton>변경</ChangeButton>
-          </Value>
+          <Value>********</Value>
         </InfoRow>
       </InfoSection>
     </Container>

@@ -69,9 +69,9 @@ const NextButton = styled.button`
   font-size: 18px;
   border: none;
   cursor: pointer;
-  background-color: red;
+  background-color: #66A3F2;
 
   &:hover {
-    background-color: darkred;
+    background-color: #0B2D59;
   }`
 ;

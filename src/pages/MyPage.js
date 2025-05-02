@@ -61,7 +61,7 @@ const Tab = styled.button`
   background: ${({ selected }) => (selected ? "#222" : "#eee")};
   color: ${({ selected }) => (selected ? "#fff" : "#000")};
   border: none;
-  border-left: 4px solid ${({ selected }) => (selected ? "#f00" : "transparent")};
+  border-left: 4px solid ${({ selected }) => (selected ? "#1D79F2" : "transparent")};
   cursor: pointer;
   text-align: left;
   &:hover {
@@ -73,42 +73,3 @@ const Content = styled.div`
   flex: 1;
   padding-left: 40px;
 `;
-
-// const TicketList = styled.div`
-//   display: flex;
-//   flex-direction: column;
-//   gap: 20px;
-// `;
-
-// const Ticket = styled.div`
-//   display: flex;
-//   background: #fafafa;
-//   border: 1px solid #ddd;
-//   padding: 15px;
-//   border-radius: 8px;
-//   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-
-//   img {
-//     width: 100px;
-//     height: 140px;
-//     object-fit: cover;
-//     border-radius: 4px;
-//     margin-right: 20px;
-//   }
-// `;
-
-// const TicketInfo = styled.div`
-//   display: flex;
-//   flex-direction: column;
-//   justify-content: space-between;
-
-//   h3 {
-//     margin: 0 0 10px;
-//   }
-
-//   p {
-//     margin: 2px 0;
-//     font-size: 14px;
-//     color: #333;
-//   }
-// `

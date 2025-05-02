@@ -39,6 +39,6 @@ const Step = styled.div`
   font-weight: ${({ active }) => (active ? "bold" : "normal")};
   color: ${({ active }) => (active ? "white" : "black")};
   background-color: ${({ active, finished }) => 
-    active ? "red" : finished ? "darkred" : "white"};
+    active ? "#66A3F2" : finished ? "#0B2D59" : "white"};
   border-bottom: 1px solid black;
 `;

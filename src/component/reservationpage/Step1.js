@@ -78,6 +78,7 @@ const Step1 = () => {
               <DateItem
                 key={idx}
                 active={selectedDate === dateObj.day}
+                weekday={dateObj.weekday}
                 onClick={() => setSelectedDate(dateObj.day)}
               >
                 <div>{dateObj.day}</div>
@@ -92,18 +93,18 @@ const Step1 = () => {
 
           {movies.map((movie, idx) => (
             <MovieItemWithTime key={idx}>
-              <MovieTitleWithTime><StyledImg src={age15}/>{movie}</MovieTitleWithTime>
+              <MovieTitleWithTime><StyledImg src={age15} />{movie}</MovieTitleWithTime>
               <Theater>상영관1 - 2D</Theater>
               <TimeList>
                 {times.map((time, idx) => (
                   <TimeItem
                     key={idx}
                     active={selectedTime === time && selectedMovieWithTime === movie}
-                    onClick={() => {setSelectedTime(time); setSelectedMovieWithTime(movie);}}
+                    onClick={() => { setSelectedTime(time); setSelectedMovieWithTime(movie); }}
                   >
                     <TimeItemSchedule>{time}</TimeItemSchedule>
                     <TimeItemInfo>188/206
-                      </TimeItemInfo>
+                    </TimeItemInfo>
                   </TimeItem>
                 ))}
               </TimeList>
@@ -141,7 +142,7 @@ const TimeSelection = styled.div`
 
 const Title = styled.h2`
   width: 100%;
-  background-color: black;;
+  background-color:#1D79F2;;
   color: white;
   text-align: center;
   font-size: 28px;
@@ -231,20 +232,25 @@ const DateItem = styled.div`
   height: 70px;
   cursor: pointer;
   transition: all 0.3s;
+
   > div:first-child {
     font-size: 18px;
-    font-weight: ${({ active }) => (active ? "bold" : "normal")};  // 날짜 부분 스타일
     background: ${({ active }) => (active ? "black" : "transparent")};
-    color: ${({ active }) => (active ? "white" : "black")};
+    color: ${({ active, weekday }) => {
+      if (active) return "white";
+      if (weekday === "토") return "blue";
+      if (weekday === "일") return "red";
+      return "black";
+    }};
     font-weight: ${({ active }) => (active ? "bold" : "normal")};
     border-radius: 50%;
-    width:40px;
-    height:40px;
-    text-align:center;
-    padding-top:10px;
-    }
-
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    padding-top: 10px;
+  }
 `;
+
 
 const MovieListWithTime = styled.div`
   display: flex;
@@ -269,7 +275,7 @@ const Theater = styled.div`
   margin:0 10px;
   font-size:12px;
 
-` 
+`
 const TimeList = styled.div`
   margin:15px 20px;
   display: flex;

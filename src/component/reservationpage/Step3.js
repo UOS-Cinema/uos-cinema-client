@@ -7,19 +7,7 @@ const Step3 = () => {
     const [selectedPayment, setSelectedPayment] = useState(null);
   return (
     <Container>
-      <Content>
-        <Title>예매정보</Title>
-        <Body>
-          <StyledImg src="https://upload.wikimedia.org/wikipedia/en/5/53/Parasite_%282019_film%29.png" />
-          <TicketInfo>
-            <div>야당(2D)</div>
-            <div>2025.4.21</div>
-            <div>상영관1</div>
-            <div>성인1, 청소년1</div>
-            <div>좌석 E11, E12</div>
-          </TicketInfo>
-        </Body>
-      </Content>
+
       <Content>
         <Title>포인트</Title>
         <PointContainer>
@@ -112,10 +100,6 @@ const Container = styled.div`
   width: 100%;
 `;
 
-const StyledImg = styled.img`
-  width: 200px;
-  height: 280px;
-`;
 
 const Content = styled.div`
   width: 100%;
@@ -126,24 +110,9 @@ const Content = styled.div`
   }
 `;
 
-const Body = styled.div`
-  display: flex;
-  flex-direction: row;
-`;
-
-const TicketInfo = styled.div`
-  font-size: 16px;
-  
-  > div:first-child {
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: 30px;
-  }
-`;
-
 const Title = styled.h2`
   width: 100%;
-  background-color: black;
+  background-color: #1D79F2;
   color: white;
   text-align: center;
   font-size: 28px;
@@ -236,7 +205,7 @@ const TotalPaymentInfoContainer = styled.div`
     margin-top:150px;
 `;
 const TotalPaymentInfo = styled.div`
-    background-color:darkgray;
+    background-color:#66A3F2;
     color:white;
     display:flex;
     justify-content:space-between;
@@ -247,7 +216,7 @@ const TotalPaymentInfo = styled.div`
   }
   
   &:last-child { /* 여기 수정 */
-    background-color: red;
+    background-color: #0B2D59;
      justify-content:center;
   }
 `;

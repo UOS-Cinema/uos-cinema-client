@@ -11,6 +11,7 @@ const PointInfo = () => {
       type: "earn", // 적립
       movieTitle: "인터스텔라",
       bookingNumber: "A123456",
+      paymentNumber:"ASD12312",
       date: "2025-04-20",
       pointChange: 5000,
     },
@@ -19,6 +20,7 @@ const PointInfo = () => {
       type: "use", // 사용
       movieTitle: "듄: 파트2",
       bookingNumber: "B789012",
+      paymentNumber:"HDJAS123",
       date: "2025-04-22",
       pointChange: -3000,
     },
@@ -27,6 +29,7 @@ const PointInfo = () => {
       type: "earn",
       movieTitle: "라라랜드",
       bookingNumber: "C345678",
+      paymentNumber:"VSDAS231",
       date: "2025-04-25",
       pointChange: 4000,
     },
@@ -45,7 +48,7 @@ const PointInfo = () => {
           .map((item) => (
             <HistoryItem key={item.id} type={item.type}>
               <div>
-                <strong>{item.movieTitle}</strong> ({item.bookingNumber})
+                <strong>{item.movieTitle}</strong> (예매번호: {item.bookingNumber} | 결제번호: {item.paymentNumber})
               </div>
               <div>{item.date}</div>
               <PointChange type={item.type}>
@@ -76,7 +79,7 @@ const CurrentPoint = styled.div`
 const HistoryList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+
 `;
 
 const HistoryItem = styled.div`
@@ -84,8 +87,6 @@ const HistoryItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-radius: 8px;
-  background-color: ${({ type }) => (type === "earn" ? "#e0f0ff" : "#ffe0e0")}; // 연한 파란 (#e0f0ff)
   border: 1px solid #ccc;
 `;
 const PointChange = styled.div`

@@ -1,96 +1,105 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import styled from "styled-components";
 import Navbar from "../component/common/NavBar";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 const LoginPage = () => {
-    const [activeMainTab, setActiveMainTab] = useState("member"); // "member" or "guest"
-    const [activeGuestTab, setActiveGuestTab] = useState("login"); // "login" or "check"
+  const [activeMainTab, setActiveMainTab] = useState("member");
+  const { user, setUser } = useContext(UserContext);
+  const [id, setId] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-    return (
-        <Container>
-            <Navbar underline={true}/>
-            <LoginContainer>
-                {/* 메인 탭 */}
-                <TabMenu>
-                    <Tab active={activeMainTab === "member"} onClick={() => setActiveMainTab("member")}>
-                        회원 로그인
-                    </Tab>
-                    <Tab active={activeMainTab === "guest"} onClick={() => setActiveMainTab("guest")}>
-                        비회원
-                    </Tab>
-                </TabMenu>
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (id === "admin" && password === "admin") {
+      setUser({ id: "admin", role: "admin" });
+      alert("관리자로 로그인되었습니다.");
+      navigate("/");
+    } else {
+      setUser({ id: id, role: "member" })
+      alert("로그인 성공");
+      navigate("/");
+    }
+  };
+  return (
+    <Container>
+      <Navbar underline={true} />
+      <LoginContainer>
+        {/* 메인 탭 */}
+        <TabMenu>
+          <Tab active={activeMainTab === "member"} onClick={() => setActiveMainTab("member")}>
+            회원
+          </Tab>
+          <Tab active={activeMainTab === "guest"} onClick={() => setActiveMainTab("guest")}>
+            비회원
+          </Tab>
+        </TabMenu>
 
-                {/* 비회원 서브탭 */}
-                {activeMainTab === "guest" && (
-                    <SubTabMenu>
-                        <SubTab active={activeGuestTab === "login"} onClick={() => setActiveGuestTab("login")}>
-                            비회원 로그인
-                        </SubTab>
-                        <SubTab active={activeGuestTab === "check"} onClick={() => setActiveGuestTab("check")}>
-                            비회원 예매확인
-                        </SubTab>
-                    </SubTabMenu>
-                )}
 
-                {/* 폼 */}
-                <Form>
-                    {activeMainTab === "member" && (
-                        <>
-                            <Input type="text" placeholder="아이디" />
-                            <Input type="password" placeholder="비밀번호" />
-                            <LoginButton>로그인</LoginButton>
+        {/* 폼 */}
+        <Form onSubmit={handleLogin}>
+          {activeMainTab === "member" && (
+            <>
+              {/* ✅ 입력값 상태 연결 */}
+              <Input
+                type="text"
+                placeholder="아이디"
+                value={id}
+                onChange={(e) => setId(e.target.value)}
+              />
+              <Input
+                type="password"
+                placeholder="비밀번호"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              {/* ✅ handleLogin 연결 */}
+              <LoginButton type="submit" >로그인</LoginButton>
 
-                            {/* 회원가입/아이디찾기 버튼 추가 */}
-                            <LinkButtonWrapper>
-                                <LinkButton><StyledLink to="/signup">회원가입하기</StyledLink></LinkButton>
-                                <LinkButton>아이디/비밀번호 찾기</LinkButton>
-                            </LinkButtonWrapper>
-                        </>
-                    )}
+              <LinkButtonWrapper>
+                <LinkButton>
+                  <StyledLink to="/signup">회원가입하기</StyledLink>
+                </LinkButton>
+                <LinkButton>아이디/비밀번호 찾기</LinkButton>
+              </LinkButtonWrapper>
+            </>
+          )}
 
-                    {activeMainTab === "guest" && activeGuestTab === "login" && (
-                        <>
-                            <Input type="text" placeholder="이름" />
-                            <Input type="tel" placeholder="휴대폰 번호" />
-                            <DateSelectWrapper>
-                                <Select>
-                                    <option>년</option>
-                                    {Array.from({ length: 100 }, (_, i) => (
-                                        <option key={i}>{2025 - i}</option>
-                                    ))}
-                                </Select>
-                                <Select>
-                                    <option>월</option>
-                                    {[...Array(12)].map((_, i) => (
-                                        <option key={i}>{i + 1}</option>
-                                    ))}
-                                </Select>
-                                <Select>
-                                    <option>일</option>
-                                    {[...Array(31)].map((_, i) => (
-                                        <option key={i}>{i + 1}</option>
-                                    ))}
-                                </Select>
-                            </DateSelectWrapper>
-                            <Input type="password" placeholder="예매 비밀번호" />
-                            <Input type="password" placeholder="예매 비밀번호 확인" />
-                            <LoginButton>비회원 로그인</LoginButton>
-                        </>
-                    )}
+          {activeMainTab === "guest" && (
+            <>
+              <Input type="text" placeholder="이름" />
+              <Input type="tel" placeholder="휴대폰 번호" />
+              <DateSelectWrapper>
+                <Select>
+                  <option>년</option>
+                  {Array.from({ length: 100 }, (_, i) => (
+                    <option key={i}>{2025 - i}</option>
+                  ))}
+                </Select>
+                <Select>
+                  <option>월</option>
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i}>{i + 1}</option>
+                  ))}
+                </Select>
+                <Select>
+                  <option>일</option>
+                  {[...Array(31)].map((_, i) => (
+                    <option key={i}>{i + 1}</option>
+                  ))}
+                </Select>
+              </DateSelectWrapper>
+              <Input type="password" placeholder="예매 비밀번호" />
+              <Input type="password" placeholder="예매 비밀번호 확인" />
+              <LoginButton>비회원 로그인</LoginButton>
+            </>
+          )}
 
-                    {activeMainTab === "guest" && activeGuestTab === "check" && (
-                        <>
-                            <Input type="text" placeholder="이름" />
-                            <Input type="tel" placeholder="휴대폰 번호" />
-                            <Input type="password" placeholder="비회원 비밀번호" />
-                            <LoginButton>예매 확인</LoginButton>
-                        </>
-                    )}
-                </Form>
-            </LoginContainer>
-        </Container>
-    );
+        </Form>
+      </LoginContainer>
+    </Container>
+  );
 };
 
 export default LoginPage;
@@ -114,10 +123,6 @@ const TabMenu = styled.div`
   margin-bottom: 10px;
 `;
 
-const SubTabMenu = styled.div`
-  display: flex;
-  margin-bottom: 20px;
-`;
 
 const Tab = styled.div`
   flex: 1;
@@ -129,11 +134,7 @@ const Tab = styled.div`
   color: ${(props) => (props.active ? "#007BFF" : "#666")};
 `;
 
-const SubTab = styled(Tab)`
-  font-size: 14px;
-`;
-
-const Form = styled.div`
+const Form = styled.form`
   display: flex;
   flex-direction: column;
 `;

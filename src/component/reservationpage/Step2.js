@@ -44,13 +44,7 @@ const Step2 = () => {
     <Container>
       <Title>인원 선택</Title>
       <SelectNum>
-        <StyledImg src="https://upload.wikimedia.org/wikipedia/en/5/53/Parasite_%282019_film%29.png" />
-        <MovieInfoContainer>
-          <MovieInfo>야당(2D)</MovieInfo>
-          <MovieInfo>2025.4.21</MovieInfo>
-          <MovieInfo>상영관1</MovieInfo>
-          <MovieInfo>19:15-21:28</MovieInfo>
-        </MovieInfoContainer>
+
         <SelectItem>
           <Label>성인</Label>
           <Button onClick={() => setAdultCount(adultCount - 1)}>-</Button>
@@ -75,6 +69,7 @@ const Step2 = () => {
           <Number>{discountedCount}</Number>
           <Button onClick={() => setDiscountedCount(discountedCount + 1)}>+</Button>
         </SelectItem>
+        <div>총가격: {teenCount * 13000 + adultCount * 15000 + seniorCount * 13000 + discountedCount * 10000}원원</div>
       </SelectNum>
 
       <Title>좌석 선택</Title>
@@ -96,7 +91,7 @@ const Step2 = () => {
                       onClick={() => seat === 1 && handleSeatClick(x, y)}
                       isSelected={isSelected} // 선택된 좌석에 스타일 적용
                     >
-                      <SeatNumber>{seat === 1 ? seatNumber++ : ""}</SeatNumber>
+                      <SeatNumber>{seat === 1  ? seatNumber++ : ""}</SeatNumber>
                     </SeatBox>
                   );
                 })}
@@ -126,10 +121,10 @@ const Container = styled.div`
 
 const Title = styled.h2`
   width: 100%;
-  background-color: black;
+  background-color:#1D79F2;
   color: white;
   text-align: center;
-  font-size: 28px;
+  font-size: 20px;
   height: 40px;
   margin: 0;
   padding: 10px 0;
@@ -146,28 +141,12 @@ const RowLabel = styled.div`
   color: white;
 `;
 
-const StyledImg = styled.img`
-  width: 80px;
-  height: 110px;
-`;
 
 const SelectNum = styled.div`
   display: flex;
   justify-content: start;
   flex-direction: row;
   align-items: center;
-`;
-
-const MovieInfoContainer = styled.div`
-  font-size: 16px;
-  color: gray;
-`;
-
-const MovieInfo = styled.div`
-  &:first-of-type {
-    font-size: 24px;
-    color: black;
-  }
 `;
 
 const SelectItem = styled.div`
@@ -197,7 +176,7 @@ const Number = styled.div`
 const SelectSeat = styled.div`
   display: flex;
   justify-content: center;
-  background-color:black;
+  background-color:white;
   padding-top:20px;
 `;
 
@@ -213,12 +192,12 @@ const SeatRow = styled.div`
 `;
 
 const SeatBox = styled.div`
-  background-color: ${(props) => 
+  background-color: ${(props) =>
     props.isAvailable
       ? props.isSelected
-        ? "red" // 선택된 좌석은 빨간색
+        ? "#0B2D59" // 선택된 좌석은 빨간색
         : "#b6b6b6" // 사용 가능한 좌석은 회색
-      : "black"};
+      : "white"};
   height: 30px;
   width: 30px;
   border-radius: 10px 10px 0 0;

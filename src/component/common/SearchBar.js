@@ -35,9 +35,6 @@ const Button = styled.button`
   font-size: 16px;
   cursor: pointer;
 
-  &:hover {
-    background-color: #2563eb;
-  }
 `;
 
 function SearchBar() {

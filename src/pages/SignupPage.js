@@ -4,9 +4,7 @@ import Navbar from "../component/common/NavBar";
 
 const SignUpPage = () => {
     const [id, setId] = useState("");
-
     const handleDuplicateCheck = () => {
-        // TODO: 아이디 중복 확인 로직
         alert("중복 확인 기능은 아직 구현되지 않았습니다.");
     };
 
