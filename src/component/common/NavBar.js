@@ -135,7 +135,7 @@ const Navbar = ({ underline }) => {
                 <StyledLink to="/scheduleManage">상영일정 관리</StyledLink>
               </li>
               <li>
-                <StyledLink to="/managePaymentPolicy">가격정책 관리</StyledLink>
+                <StyledLink to="/paymentPolicy">가격정책 관리</StyledLink>
               </li>
             </DropdownMenu>
           </MenuItem>

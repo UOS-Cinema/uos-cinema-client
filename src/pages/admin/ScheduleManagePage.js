@@ -52,7 +52,7 @@ const ScheduleManagePage = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTheater, setSelectedTheater] = useState(null);
   const movies = ["야당", "승부", "바이러스", "플로우즈", "파과", "거룩한 밤", "아이언맨", "위플래쉬"];
-  
+
   const today = new Date();
   const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -141,8 +141,8 @@ const ScheduleManagePage = () => {
           <TheaterUL>
             {sampleTheaters.map((theater) => (
               <TheaterLI key={theater.theaterId}
-              onClick={()=>setSelectedTheater(theater.theaterId)}
-              isSelected={selectedTheater===theater.theaterId}>
+                onClick={() => setSelectedTheater(theater.theaterId)}
+                isSelected={selectedTheater === theater.theaterId}>
                 <div>
                   <Info>상영관{theater.theaterId} ({theater.name} 상영관)</Info>
                 </div>
@@ -151,13 +151,34 @@ const ScheduleManagePage = () => {
           </TheaterUL>
         </TimeSelection>
         <TimeTable></TimeTable>
+        <SaveButtonWrapper>
+          <SaveButton >저장하기</SaveButton>
+        </SaveButtonWrapper>
       </Container>
     </div>
   );
 };
 
 
+const SaveButtonWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 50px;
+`;
 
+const SaveButton = styled.button`
+  background-color: #1E90FF;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  height:60px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  &:hover {
+    background-color: #1C6DD0;
+  }
+`;
 const TheaterUL = styled.ul`
   list-style: none;
   padding: 0;

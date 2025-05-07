@@ -44,12 +44,24 @@ const MemberInfo = () => {
           <Value>********</Value>
         </InfoRow>
       </InfoSection>
+      <WithdrawButton>회원탈퇴</WithdrawButton>
     </Container>
   );
 };
 
 export default MemberInfo;
-
+const WithdrawButton = styled.button`
+  padding: 10px 20px;
+  font-size: 15px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  &:hover {
+    background-color: #c82333;
+  }
+`;
 const Container = styled.div`
   display: flex;
   flex-direction: column;

@@ -6,24 +6,17 @@ import TopReservationBanner from "../component/mainpage/TopReservationBanner";
 import { UserContext } from "../context/UserContext";
 
 const MainPage = () => {
-    const { user } = useContext(UserContext); 
-    if (user.role === "admin") {
-        return (
-            <div>
-                <Navbar underline={true}/>
-                <MovieTabSection/>
-            </div>)
-    }
-    else {
-        return (
-            <div>
-                <Navbar underline={true} />
-                <TopReservationBanner />
-                <SearchBar />
-                <MovieTabSection />
-            </div>
-        );
-    }
+    const { user } = useContext(UserContext);
+
+    return (
+        <div>
+            <Navbar underline={true} />
+            <TopReservationBanner />
+            <SearchBar />
+            <MovieTabSection />
+        </div>
+    );
+
 
 };
 

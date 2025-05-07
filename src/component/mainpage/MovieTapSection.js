@@ -22,7 +22,6 @@ const Tab = styled.div`
   font-weight: bold;
   color: ${({ active }) => (active ? '#000' : '#aaa')};
   cursor: pointer;
-  transition: color 0.3s;
 
   &:hover {
     color: #000;
@@ -38,7 +37,6 @@ const ViewAllButton = styled.button`
   color: white;
   cursor: pointer;
   padding: 6px 12px;
-  transition: color 0.3s;
 
   &:hover {
     background-color: #005fa3;
@@ -58,8 +56,88 @@ const StyledLink = styled(Link)`
   }
 `;
 
+
+const FilterContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  margin-left: 11%;
+  width: 80%;
+  margin-bottom: 20px;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const FilterButton = styled.button`
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background-color: ${({ active }) => (active ? '#1E6DFF' : '#fff')};
+  color: ${({ active }) => (active ? '#fff' : '#333')};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${({ active }) => (active ? '#005fa3' : '#eee')};
+  }
+`;
+
+const Select = styled.select`
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+`;
+
+const SearchButton = styled.button`
+  padding: 10px 16px;
+  background-color: #1E6DFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  width: fit-content;
+
+  &:hover {
+    background-color: #005fa3;
+  }
+`;
+
 const MovieTabSection = () => {
   const [activeTab, setActiveTab] = useState('chart');
+
+  // 임시 선택 상태 (조회하기 전에만 반영됨)
+  const [tempGenres, setTempGenres] = useState([]);
+  const [tempScreenTypes, setTempScreenTypes] = useState([]);
+  const [tempSortOrder, setTempSortOrder] = useState('popularity');
+
+  // 실제 반영되는 필터링 상태
+  const [filters, setFilters] = useState({
+    genres: [],
+    screenTypes: [],
+    sortOrder: 'popularity'
+  });
+
+  const toggleSelection = (value, currentList, setList) => {
+    if (currentList.includes(value)) {
+      setList(currentList.filter(v => v !== value));
+    } else {
+      setList([...currentList, value]);
+    }
+  };
+
+  const applyFilters = () => {
+    setFilters({
+      genres: tempGenres,
+      screenTypes: tempScreenTypes,
+      sortOrder: tempSortOrder
+    });
+  };
 
   return (
     <div>
@@ -72,11 +150,58 @@ const MovieTabSection = () => {
             상영예정작
           </Tab>
         </TabList>
-
         <ViewAllButton><StyledLink to={`/moviechart`}>전체보기</StyledLink></ViewAllButton>
       </TabContainer>
 
-      {activeTab === 'chart' ? <MovieGrid /> : <MovieGrid />}
+      <FilterContainer>
+        <div>
+          <strong>정렬</strong><br />
+          <Select value={tempSortOrder} onChange={(e) => setTempSortOrder(e.target.value)}>
+            <option value="popularity">인기순</option>
+            <option value="release">개봉일순</option>
+          </Select>
+        </div>
+
+        <div>
+          <strong>장르</strong>
+          <ButtonGroup>
+            {['액션', '코미디', '드라마', '공포', '로맨스'].map(genre => (
+              <FilterButton
+                key={genre}
+                active={tempGenres.includes(genre)}
+                onClick={() => toggleSelection(genre, tempGenres, setTempGenres)}
+              >
+                {genre}
+              </FilterButton>
+            ))}
+          </ButtonGroup>
+        </div>
+
+        <div>
+          <strong>상영유형</strong>
+          <ButtonGroup>
+            {['2D', '3D', 'IMAX', '4DX'].map(type => (
+              <FilterButton
+                key={type}
+                active={tempScreenTypes.includes(type)}
+                onClick={() => toggleSelection(type, tempScreenTypes, setTempScreenTypes)}
+              >
+                {type}
+              </FilterButton>
+            ))}
+          </ButtonGroup>
+        </div>
+
+
+        <SearchButton onClick={applyFilters}>조회하기</SearchButton>
+      </FilterContainer>
+
+      <MovieGrid
+        type={activeTab}
+        sortOrder={filters.sortOrder}
+        genres={filters.genres}
+        screenTypes={filters.screenTypes}
+      />
     </div>
   );
 };

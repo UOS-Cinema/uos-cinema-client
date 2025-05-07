@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { movies } from '../../example_data/movies';
+import { useContext } from 'react';
+import { UserContext } from '../../context/UserContext';
 
 // 스타일 컴포넌트
 const Grid = styled.div`
@@ -78,7 +80,7 @@ const ReservationBtn = styled.button`
 const MovieGrid = () => {
   // 최대 5개 항목만 표시
   const displayedMovies = movies.slice(0, 5);
-
+  const { user } = useContext(UserContext);
   return (
     <Grid>
       {displayedMovies.map((movie) => (
@@ -92,14 +94,23 @@ const MovieGrid = () => {
               <p>배우: {movie.actors}</p>
             </Info>
           </StyledLink>
-          <ButtonGroup>
-            <StyledLink to={`/reservation`}>
-              <ReservationBtn>예매하기</ReservationBtn>
+          {user.role === "admin" ? <ButtonGroup>
+            <StyledLink to={`/CreateMovie`}>
+              <ReservationBtn>수정하기</ReservationBtn>
             </StyledLink>
-            <StyledLink to={`/movie/${movie.id}`}>
-              <ReservationBtn>상세보기</ReservationBtn>
+            <StyledLink to={`/movieDelete`}>
+              <ReservationBtn>삭제하기</ReservationBtn>
             </StyledLink>
-          </ButtonGroup>
+          </ButtonGroup> :
+            <ButtonGroup>
+              <StyledLink to={`/reservation`}>
+                <ReservationBtn>예매하기</ReservationBtn>
+              </StyledLink>
+              <StyledLink to={`/movie/${movie.id}`}>
+                <ReservationBtn>상세보기</ReservationBtn>
+              </StyledLink>
+            </ButtonGroup>}
+
         </MovieCard>
       ))}
     </Grid>

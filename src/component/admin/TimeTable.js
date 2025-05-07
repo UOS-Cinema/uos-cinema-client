@@ -63,7 +63,7 @@ const TimeTable = () => {
         setHoverDuration(null);
     };
     const handleSlotClick = (startIndex) => {
-       
+
         const startTime = formatTime(startIndex); // hoverStart를 시간 형식으로 변환
         const duration = Math.ceil(135 / 15);
         for (let i = startIndex; i < startIndex + duration; i++) {
@@ -99,7 +99,7 @@ const TimeTable = () => {
                             onClick={() => handleSlotClick(hoverStart)}
                         >
                             <TimeText>{showTime ? formatTime(i) : ''}</TimeText>
-                            <SlotBox hoverStart={hoverStart} hoverDuration={hoverDuration} startIndex={i} hoverText={hoverText}/>
+                            <SlotBox hoverStart={hoverStart} hoverDuration={hoverDuration} startIndex={i} hoverText={hoverText} />
                         </TimeSlotRow>
                     );
                 })}
@@ -117,6 +117,10 @@ const TimeTable = () => {
                         >
                             <div>{schedule.movie}</div>
                             <div>{schedule.startTime}~{endTime}</div>
+                            <ButtonGroup>
+                                <EditButton >수정</EditButton>
+                                <DeleteButton >삭제</DeleteButton>
+                            </ButtonGroup>
                         </MovieBlock>
                     );
                 })}
@@ -126,7 +130,30 @@ const TimeTable = () => {
     );
 };
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`;
 
+const EditButton = styled.button`
+  background-color: inherit;
+  border:1px solid #1e90ff;
+  color: white;
+ 
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+`;
+
+const DeleteButton = styled.button`
+  background-color: inherit;
+  border:1px solid #ff4d4f;
+  color: white;
+  
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+`;
 
 const TimeTableWrapper = styled.div`
   display: flex;
@@ -175,7 +202,7 @@ const SlotBox = styled.div`
             ? "none"  // hover 시 색상 변화
             : "1px solid #eee"};
   &::after {
-    content: ${({ hoverText, hoverStart,startIndex }) => hoverText&&hoverStart===startIndex ? `"${hoverText}"` : '""'};
+    content: ${({ hoverText, hoverStart, startIndex }) => hoverText && hoverStart === startIndex ? `"${hoverText}"` : '""'};
     position: absolute;
     top: 50%;
     left: 50%;

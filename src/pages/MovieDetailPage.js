@@ -61,7 +61,10 @@ const CardContainer = styled.div`
   justify-content: flex-start; /* 왼쪽 정렬 */
 `;
 
-const Card = styled.div`
+const Card = styled(Link)`
+
+    text-decoration: none;
+    color:black;
     background-color: #fff;
     border-radius: 8px;
     border:1px solid rgba(0, 0, 0, 0.1);    
@@ -97,7 +100,7 @@ const MovieDetailPage = () => {
                     <h3>감독</h3>
                     <CardContainer>
 
-                        <Card>
+                        <Card to="/director">
                             <CardImg src={director} alt="director" />
                             <div>{movie.director}</div>
                             <div>감독</div>
@@ -106,7 +109,7 @@ const MovieDetailPage = () => {
                     <h3>주연</h3>
                     <CardContainer>
 
-                        <Card>
+                        <Card to="/actor">
                             <CardImg src={actor1} />
                             <div>{movie.actors[0]}</div>
                             <div>오대수 역</div>
