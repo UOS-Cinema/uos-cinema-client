@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import logo from '../../asset/logo.svg';
 import { Link } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
-
+import { FaSearch } from "react-icons/fa";
 const NavbarContainer = styled.nav`
   padding: 10px 10%;
   display: flex;
@@ -90,6 +90,44 @@ const DropdownMenu = styled.ul`
    
   }
 `;
+const SearchBar = styled.input`
+  width: 300px;
+  height: 32px;
+
+  margin: 0 40px;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+border: none;
+  outline: none;
+  &:focus {
+    border-color: #1E6DFF;
+  }
+`;
+
+
+
+const Button = styled.button`
+  padding: 8px 16px;
+  background-color: white;
+  color: gray;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+
+`;
+
+const SearchContainer = styled.div`
+  border: 1px solid #ccc;
+  border-radius: 100px;
+  padding: 5px;
+  display: flex;
+  max-width: 500px;
+
+`;
 
 const Navbar = ({ underline }) => {
   const { user } = useContext(UserContext);
@@ -98,6 +136,11 @@ const Navbar = ({ underline }) => {
       <Link to="/">
         <img src={logo} alt="logo" />
       </Link>
+      <SearchContainer>
+        <SearchBar type="text" placeholder="영화 제목을 검색하세요" />
+        <Button><FaSearch /></Button>
+      </SearchContainer>
+
       {user.role === "admin" &&
         <Menu>
           <MenuItem>
