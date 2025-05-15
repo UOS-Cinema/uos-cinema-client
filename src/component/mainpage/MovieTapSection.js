@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import MovieGrid from './MovieGrid';
 import { Link } from 'react-router-dom';
+import SearchBar from '../common/SearchBar';
 
 const TabContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 20px 0;
+  margin: 10px 0;
   margin-left: 10%;
   width: 80%;
 `;
@@ -62,6 +63,7 @@ const FilterContainer = styled.div`
   flex-direction: row;
   gap: 16px;
   margin-left: 11%;
+  margin-top:20px;
   width: 80%;
   margin-bottom: 20px;
 `;
@@ -70,6 +72,7 @@ const ButtonGroup = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top:6px;
 `;
 
 const FilterButton = styled.button`
@@ -91,6 +94,7 @@ const Select = styled.select`
   border-radius: 8px;
   font-size: 14px;
   border: 1px solid #ccc;
+  margin-top:6px;
 `;
 
 const SearchButton = styled.button`
@@ -102,6 +106,7 @@ const SearchButton = styled.button`
   font-size: 14px;
   cursor: pointer;
   width: fit-content;
+  height:40px;
 
   &:hover {
     background-color: #005fa3;
@@ -141,17 +146,7 @@ const MovieTabSection = () => {
 
   return (
     <div>
-      <TabContainer>
-        <TabList>
-          <Tab active={activeTab === 'chart'} onClick={() => setActiveTab('chart')}>
-            무비차트
-          </Tab>
-          <Tab active={activeTab === 'upcoming'} onClick={() => setActiveTab('upcoming')}>
-            상영예정작
-          </Tab>
-        </TabList>
-        <ViewAllButton><StyledLink to={`/moviechart`}>전체보기</StyledLink></ViewAllButton>
-      </TabContainer>
+
 
       <FilterContainer>
         <div>
@@ -192,10 +187,19 @@ const MovieTabSection = () => {
           </ButtonGroup>
         </div>
 
-
-        <SearchButton onClick={applyFilters}>조회하기</SearchButton>
       </FilterContainer>
-
+      <SearchBar />
+      <TabContainer>
+        <TabList>
+          <Tab active={activeTab === 'chart'} onClick={() => setActiveTab('chart')}>
+            무비차트
+          </Tab>
+          <Tab active={activeTab === 'upcoming'} onClick={() => setActiveTab('upcoming')}>
+            상영예정작
+          </Tab>
+        </TabList>
+        <ViewAllButton><StyledLink to={`/moviechart`}>전체보기</StyledLink></ViewAllButton>
+      </TabContainer>
       <MovieGrid
         type={activeTab}
         sortOrder={filters.sortOrder}

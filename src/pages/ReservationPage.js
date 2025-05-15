@@ -50,6 +50,7 @@ const Container = styled.div`
 const BodyContainer = styled.div`
     display: flex;
     flex: 1;
+    margin: 0 10%;
 `;
 
 const ContentArea = styled.div`

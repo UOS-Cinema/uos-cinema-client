@@ -34,7 +34,7 @@ const TheaterDetailPage = () => {
                         <Info>제공 유형: {sampleTheater.types.join(", ")}</Info>
                     </div>
 
-                    <EditLink to="../theaterEdit">수정하기</EditLink>
+                    <EditLink to="/theaterEdit">수정하기</EditLink>
                 </InfoHeader>
                 <div>
                     <Screen>Screen</Screen>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-
+import { FiEdit } from "react-icons/fi";
+import { MdDeleteOutline } from "react-icons/md";
 const sampleSchedule = [
     {
         movie: "야당",
@@ -115,12 +116,21 @@ const TimeTable = () => {
                             startIndex={startIndex}
                             duration={duration}
                         >
-                            <div>{schedule.movie}</div>
-                            <div>{schedule.startTime}~{endTime}</div>
+
                             <ButtonGroup>
-                                <EditButton >수정</EditButton>
-                                <DeleteButton >삭제</DeleteButton>
+                                {schedule.movie}
+                                {selectedMovie === schedule.movie &&
+                                    <EditButton ><FiEdit />  </EditButton>
+                                }
+                                {selectedMovie === schedule.movie &&
+                                    <DeleteButton ><MdDeleteOutline /></DeleteButton>
+                                }
+
                             </ButtonGroup>
+
+
+                            <div>{schedule.startTime}~{endTime}</div>
+
                         </MovieBlock>
                     );
                 })}
@@ -132,26 +142,28 @@ const TimeTable = () => {
 
 const ButtonGroup = styled.div`
   display: flex;
+
+  
   gap: 8px;
 `;
 
 const EditButton = styled.button`
   background-color: inherit;
-  border:1px solid #1e90ff;
+    border:none;
   color: white;
  
   border-radius: 6px;
-  padding: 6px 10px;
+  
   cursor: pointer;
 `;
 
 const DeleteButton = styled.button`
   background-color: inherit;
-  border:1px solid #ff4d4f;
+    border:none;
   color: white;
   
   border-radius: 6px;
-  padding: 6px 10px;
+ 
   cursor: pointer;
 `;
 
@@ -159,6 +171,8 @@ const TimeTableWrapper = styled.div`
   display: flex;
   flex-direction: row;
   position: relative;
+  border:1px solid gray;
+  padding-top:1px;
 `;
 
 
@@ -220,7 +234,7 @@ const MovieBlock = styled.div`
   height: ${({ duration }) => duration * 15}px;
   top: ${({ startIndex }) => startIndex * 15}px;
   background-color:${({ isSelected }) => (isSelected ? "#1E6DFF" : "rgba(128, 128, 128, 0.6)")};
-
+    padding:5px 5px;
   color: white;
   font-size: 12px;
 

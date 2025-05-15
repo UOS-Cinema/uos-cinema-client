@@ -69,7 +69,7 @@ const Step2 = () => {
           <Number>{discountedCount}</Number>
           <Button onClick={() => setDiscountedCount(discountedCount + 1)}>+</Button>
         </SelectItem>
-        <div>총가격: {teenCount * 13000 + adultCount * 15000 + seniorCount * 13000 + discountedCount * 10000}원원</div>
+        <div>총가격: {teenCount * 13000 + adultCount * 15000 + seniorCount * 13000 + discountedCount * 10000}원</div>
       </SelectNum>
 
       <Title>좌석 선택</Title>

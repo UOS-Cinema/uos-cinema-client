@@ -119,9 +119,9 @@ const Step1 = () => {
 };
 
 const StyledImg = styled.img`
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 25px;
+  height: 25px;
+  border-radius: 5px;
   margin: 5px 10px;
 `;
 
@@ -145,11 +145,11 @@ const Title = styled.h2`
   background-color:#1D79F2;;
   color: white;
   text-align: center;
-  font-size: 28px;
+  font-size: 20px;
   height:40px;
   margin-top: 0;
   margin-bottom: 0;
-  padding: 10px 0;
+  padding-top:7px;
  
 `;
 
@@ -169,8 +169,9 @@ const MovieItem = styled.div`
   border-bottom: 1px solid #ccc;
   cursor: pointer;
   text-align: center;
-  font-size: 20px;
-  font-weight: ${({ active }) => (active ? "bold" : "normal")};
+  padding:7px 0;
+  font-size: 16px;
+  font-weight: ${({ active }) => (active ? "bold" : "600")};
   transition: background 0.3s, color 0.3s, font-weight 0.3s;
   width: 100%;
   &:first-of-type {
@@ -255,14 +256,15 @@ const DateItem = styled.div`
 const MovieListWithTime = styled.div`
   display: flex;
   flex-direction:column;
-  width:600px;
- 
 `;
 const MovieTitleWithTime = styled.div`
   font-size:20px;
   display:flex;
   text-algin:center;
   align-items:center;
+  font-size:16px;
+  font-weight:600;
+  margin:3px 10px;
 `;
 const MovieItemWithTime = styled.div`
   border:1px solid #ccc;
@@ -272,7 +274,7 @@ const MovieItemWithTime = styled.div`
 `;
 const Theater = styled.div`
   color:gray;
-  margin:0 10px;
+  margin:0 20px;
   font-size:12px;
 
 `
@@ -282,7 +284,7 @@ const TimeList = styled.div`
   flex-direction:row;
   gap: 10px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);  /* 한 줄에 최대 5개의 항목 */
+  grid-template-columns: repeat(5, 1fr); 
 `;
 const TimeItem = styled.div`
   padding: 10px;

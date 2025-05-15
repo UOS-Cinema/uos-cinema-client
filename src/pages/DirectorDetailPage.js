@@ -41,7 +41,7 @@ const DirectorDetailPage = () => {
                 </RightSection>
                 {user.role === "admin" &&
                     <ActionButtons>
-                        <EditButton to="/createDirector">수정하기</EditButton>
+                        <EditButton to="/createDirector ">수정하기</EditButton>
                         <DeleteButton >삭제하기</DeleteButton>
                     </ActionButtons>}
             </Container>
@@ -100,7 +100,6 @@ const LeftSection = styled.div`
 const ProfileImage = styled.img`
   width: 100%;
   border-radius: 12px;
-  object-fit: cover;
 `;
 
 const DirectorName = styled.h2`
@@ -117,7 +116,8 @@ const RightSection = styled.div`
 const SectionTitle = styled.h3`
   font-size: 20px;
   margin-bottom: 20px;
-  color: #1e6dff;
+  margin-top:0;
+
 `;
 
 const FilmographyGrid = styled.div`

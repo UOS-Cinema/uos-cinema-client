@@ -4,6 +4,7 @@ import age15 from '../../asset/age15.png';
 import Navbar from "../../component/common/NavBar";
 import { Link } from "react-router-dom";
 import TimeTable from "../../component/admin/TimeTable";
+
 // 샘플 데이터
 const sampleTheaters = [
   {
@@ -151,9 +152,9 @@ const ScheduleManagePage = () => {
           </TheaterUL>
         </TimeSelection>
         <TimeTable></TimeTable>
-        <SaveButtonWrapper>
+        {/* <SaveButtonWrapper>
           <SaveButton >저장하기</SaveButton>
-        </SaveButtonWrapper>
+        </SaveButtonWrapper> */}
       </Container>
     </div>
   );
@@ -163,15 +164,15 @@ const ScheduleManagePage = () => {
 const SaveButtonWrapper = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin: 10px 50px;
+  margin:0 20px;
 `;
 
 const SaveButton = styled.button`
   background-color: #1E90FF;
   color: white;
   font-size: 16px;
-  padding: 10px 20px;
-  height:60px;
+  padding:0 10px;
+  height:40px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
@@ -228,7 +229,7 @@ const Container = styled.div`
 const TimeSelection = styled.div`
   display:flex;
   align-items:start;
- 
+  border:1px solid gray;
   flex-direction:column;
    &:first-of-type {
     border-right: 10px solid black;
@@ -241,7 +242,8 @@ const MovieSelection = styled.div`
   display: flex;
   flex-direction: column;
   min-width:200px;
-  border-right: 1px solid gray;
+
+  border:1px solid gray;
   align-items: start;
 `;
 

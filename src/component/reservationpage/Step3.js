@@ -115,10 +115,10 @@ const Title = styled.h2`
   background-color: #1D79F2;
   color: white;
   text-align: center;
-  font-size: 28px;
+  font-size: 20px;
   height: 40px;
   margin: 0;
-  padding: 10px 0;
+  padding-top:5px;
 `;
 
 const PointContainer = styled.div`

@@ -130,7 +130,7 @@ const RightSection = styled.div`
 const SectionTitle = styled.h3`
   font-size: 20px;
   margin-bottom: 20px;
-  color: #1e6dff;
+  margin-top:0;
 `;
 
 const FilmographyGrid = styled.div`

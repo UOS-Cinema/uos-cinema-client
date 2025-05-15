@@ -26,10 +26,11 @@ const TicketList = () => {
                         <img src={movie.poster} alt={movie.title} />
                         <TicketInfo>
                             <h3>{movie.title}</h3>
-                            <p>감독: {movie.director}</p>
-                            <p>출연: {movie.actors}</p>
                             <p>관람등급: {movie.class || "정보 없음"}</p>
-                            <p>개봉일: {movie.releaseDate || "정보 없음"}</p>
+                            <p>상영관1(2D)-E11, E12(성인1, 청소년1)</p>
+                            <p>상영시간: 13:30-15:25</p>
+                            <p>예매완료 시간: 2019.6.15 17:30</p>
+                         
                         </TicketInfo>
                     </Ticket>
                 ))}

@@ -23,10 +23,12 @@ const CardImg = styled.img`
 const AgeImg = styled.img`
     width: 40px;
     height: 40px;
+    margin-right:10px;
 `;
 
 const StyledLine = styled.div`
     display: flex;
+    margin-top:40px;
     justify-content: start;
     align-items: center;
     text-align: center;
@@ -87,7 +89,7 @@ const MovieDetailPage = () => {
     return (
         <Container>
             <Navbar underline={true} />
-            <SearchBar />
+
             <Info>
                 <Poster src={movie.poster} alt={movie.title} />
                 <div>
