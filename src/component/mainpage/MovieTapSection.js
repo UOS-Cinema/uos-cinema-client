@@ -60,6 +60,7 @@ const StyledLink = styled(Link)`
 
 const FilterContainer = styled.div`
   display: flex;
+  
   flex-direction: row;
   gap: 16px;
   margin-left: 11%;
@@ -187,8 +188,8 @@ const MovieTabSection = () => {
           </ButtonGroup>
         </div>
 
+        <SearchBar />
       </FilterContainer>
-      <SearchBar />
       <TabContainer>
         <TabList>
           <Tab active={activeTab === 'chart'} onClick={() => setActiveTab('chart')}>

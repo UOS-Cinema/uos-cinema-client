@@ -7,8 +7,10 @@ const SearchContainer = styled.div`
   padding: 12px;
   display: flex;
   gap: 8px;
-  max-width: 800px;
-  margin-left:10%;
+  
+  width:500px;
+  height:50px;
+  
 `;
 
 const Select = styled.select`

@@ -116,7 +116,6 @@ const TimeTable = () => {
                             startIndex={startIndex}
                             duration={duration}
                         >
-
                             <ButtonGroup>
                                 {schedule.movie}
                                 {selectedMovie === schedule.movie &&
@@ -125,10 +124,7 @@ const TimeTable = () => {
                                 {selectedMovie === schedule.movie &&
                                     <DeleteButton ><MdDeleteOutline /></DeleteButton>
                                 }
-
                             </ButtonGroup>
-
-
                             <div>{schedule.startTime}~{endTime}</div>
 
                         </MovieBlock>

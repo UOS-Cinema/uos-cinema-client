@@ -5,12 +5,22 @@ import Navbar from "../component/common/NavBar";
 import SearchBar from "../component/common/SearchBar";
 import { UserContext } from "../context/UserContext";
 
+
+const SerachBarWrapper = styled.div`
+    display:flex;
+    flex-direciton:row;
+    justify-content: center;
+    margin-top:50px;
+`;
 const HomePage = () => {
     const { user } = useContext(UserContext);
     return (
         <Container>
             <Navbar underline={true} />
-            <SearchBar />
+            <SerachBarWrapper>
+
+                <SearchBar />
+            </SerachBarWrapper>
             {user.role === "admin" && (
                 <AdminSection>
                     <SectionTitle>관리자 메뉴</SectionTitle>
