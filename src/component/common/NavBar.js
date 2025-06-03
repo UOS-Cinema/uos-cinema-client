@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import { FaSearch } from "react-icons/fa";
 const NavbarContainer = styled.nav`
-  padding: 10px 10%;
+  padding: 20px 10%;
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
+import { FaMinus } from "react-icons/fa6";
+import { FaPlus } from "react-icons/fa6";
 
 const seatStandard = [
   [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -42,37 +44,37 @@ const Step2 = () => {
 
   return (
     <Container>
-      <Title>인원 선택</Title>
+      {/* <Title>인원 선택</Title> */}
       <SelectNum>
 
         <SelectItem>
           <Label>성인</Label>
-          <Button onClick={() => setAdultCount(adultCount - 1)}>-</Button>
+          <Button onClick={() => setAdultCount(adultCount - 1)}><FaMinus /></Button>
           <Number>{adultCount}</Number>
-          <Button onClick={() => setAdultCount(adultCount + 1)}>+</Button>
+          <Button onClick={() => setAdultCount(adultCount + 1)}><FaPlus /></Button>
         </SelectItem>
         <SelectItem>
           <Label>청소년</Label>
-          <Button onClick={() => setTeenCount(teenCount - 1)}>-</Button>
+          <Button onClick={() => setTeenCount(teenCount - 1)}><FaMinus /></Button>
           <Number>{teenCount}</Number>
-          <Button onClick={() => setTeenCount(teenCount + 1)}>+</Button>
+          <Button onClick={() => setTeenCount(teenCount + 1)}><FaPlus /></Button>
         </SelectItem>
         <SelectItem>
           <Label>경로</Label>
-          <Button onClick={() => setSeniorCount(seniorCount - 1)}>-</Button>
+          <Button onClick={() => setSeniorCount(seniorCount - 1)}><FaMinus /></Button>
           <Number>{seniorCount}</Number>
-          <Button onClick={() => setSeniorCount(seniorCount + 1)}>+</Button>
+          <Button onClick={() => setSeniorCount(seniorCount + 1)}><FaPlus /></Button>
         </SelectItem>
         <SelectItem>
           <Label>우대</Label>
-          <Button onClick={() => setDiscountedCount(discountedCount - 1)}>-</Button>
+          <Button onClick={() => setDiscountedCount(discountedCount - 1)}><FaMinus /></Button>
           <Number>{discountedCount}</Number>
-          <Button onClick={() => setDiscountedCount(discountedCount + 1)}>+</Button>
+          <Button onClick={() => setDiscountedCount(discountedCount + 1)}><FaPlus /></Button>
         </SelectItem>
-        <div>총가격: {teenCount * 13000 + adultCount * 15000 + seniorCount * 13000 + discountedCount * 10000}원</div>
+        <TotalPrice>{teenCount * 13000 + adultCount * 15000 + seniorCount * 13000 + discountedCount * 10000}원</TotalPrice>
       </SelectNum>
 
-      <Title>좌석 선택</Title>
+      {/* <Title>좌석 선택</Title> */}
       <Screen>Screen</Screen>
       <SelectSeat>
         <SeatContainer>
@@ -91,7 +93,9 @@ const Step2 = () => {
                       onClick={() => seat === 1 && handleSeatClick(x, y)}
                       isSelected={isSelected} // 선택된 좌석에 스타일 적용
                     >
-                      <SeatNumber>{seat === 1  ? seatNumber++ : ""}</SeatNumber>
+                      <SeatNumber
+                        isSelected={isSelected}
+                      >{seat === 1 ? seatNumber++ : ""}</SeatNumber>
                     </SeatBox>
                   );
                 })}
@@ -106,10 +110,14 @@ const Step2 = () => {
 
 const Screen = styled.div`
   color: white;
-  background-color: gray;
+  background-color: #66A3F2;
   width: 100%;
-  height: 30px;
+  padding:16px 0;
+  font-size:16px;
   text-align: center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 `;
 
 const Container = styled.div`
@@ -117,6 +125,7 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: start;
   width: 100%;
+   border-right: 1px solid  #DCEBFF;
 `;
 
 const Title = styled.h2`
@@ -136,9 +145,9 @@ const RowLabel = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
-  color: white;
+  color: #1E6DFF;
 `;
 
 
@@ -147,6 +156,8 @@ const SelectNum = styled.div`
   justify-content: start;
   flex-direction: row;
   align-items: center;
+  justify-content:center;
+  padding:8px 0;
 `;
 
 const SelectItem = styled.div`
@@ -156,23 +167,32 @@ const SelectItem = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
+  
 `;
 
 const Button = styled.button`
-  padding: 10px;
-  font-size: 18px;
+  padding: 4px;
+  font-size: 14px;
+  margin-top:5px;
+  margin-left:4px;
+  margin-right:4px;
   cursor: pointer;
+  text-align:center;
   transition: background-color 0.3s ease;
-  margin: 5px;
+  
   background-color: inherit;
   border: none;
 `;
 
 const Number = styled.div`
-  font-size: 20px;
-  padding: 0 10px;
+  font-size: 16px;
+  padding: 0 4px;
 `;
-
+const TotalPrice = styled.div`
+  font-size:16px;
+  font-weight:600;
+  margin-left:30px;
+`;
 const SelectSeat = styled.div`
   display: flex;
   justify-content: center;
@@ -192,12 +212,22 @@ const SeatRow = styled.div`
 `;
 
 const SeatBox = styled.div`
-  background-color: ${(props) =>
+
+  border: ${(props) =>
     props.isAvailable
       ? props.isSelected
-        ? "#0B2D59" // 선택된 좌석은 빨간색
-        : "#b6b6b6" // 사용 가능한 좌석은 회색
-      : "white"};
+        ? "2px solid #1E6DFF" // 선택된 좌석은 빨간색
+        : "2px solid #b6b6b6" // 사용 가능한 좌석은 회색
+      : "2px solid white"};
+  border: ${(props) =>
+    props.isAvailable
+      ? "2px solid #1E6DFF"
+      : "2px solid white"};
+  background-color:${(props) =>
+    props.isSelected
+      ? " #1E6DFF" // 선택된 좌석은 빨간색
+
+      : " white"};
   height: 30px;
   width: 30px;
   border-radius: 10px 10px 0 0;
@@ -210,11 +240,16 @@ const SeatBox = styled.div`
 
 const SeatNumber = styled.div`
   font-size: 14px;
-  color: white;
+  color: ${(props) =>
+    props.isSelected
+      ? " white" // 선택된 좌석은 빨간색
+
+      : " #1E6DFF"};
 `;
 
 const Label = styled.div`
-  margin: 10px;
+  margin-left: 8px;
+  font-size:12px;
 `;
 
 export default Step2;

@@ -9,7 +9,7 @@ const Step3 = () => {
     <Container>
 
       <Content>
-        <Title>포인트</Title>
+        {/* <Title>포인트</Title> */}
         <PointContainer>
           <PointLabel>사용할 포인트</PointLabel>
           <StyledInput placeholder="포인트를 입력하세요" />
@@ -18,7 +18,7 @@ const Step3 = () => {
         </PointContainer>
       </Content>
       <Content>
-        <Title>결제수단</Title>
+        {/* <Title>결제수단</Title> */}
         <PaymentContainer>
           <TabList>
             <TabButton
@@ -102,8 +102,11 @@ const Container = styled.div`
 
 
 const Content = styled.div`
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
   width: 100%;
-  border-right: 1px solid gray;
+ border-right: 1px solid  #DCEBFF;
   &:last-child:{
     display:flex;
     justify-content:space-between;
@@ -128,15 +131,15 @@ const PointContainer = styled.div`
   justify-content: space-between;
 `;
 
-const PointLabel = styled.label`
-  font-size: 18px;
+const PointLabel = styled.div`
+  font-size: 16px;
   font-weight: bold;
   margin-bottom: 10px;
 `;
 
 const StyledInput = styled.input`
   padding: 10px;
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 10px;
   border: 1px solid gray;
   border-radius: 5px;
@@ -144,7 +147,7 @@ const StyledInput = styled.input`
 `;
 
 const AvailablePoints = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   color: gray;
   margin-top: 10px;
 `;
@@ -155,46 +158,41 @@ const PaymentContainer = styled.div`
 `;
 const Payment = styled.div`
   padding: 12px;
-  font-size: 18px;
-  border-bottom: 1px solid gray;
+  font-size: 16px;
+  border-bottom: 1px solid  #DCEBFF;
   cursor: pointer;
 
-  &:hover {
-    background-color: #444;
-    color: white;
-  }
+
 
   &:active {
     background-color: #ddd; /* 선택 시 배경색 변경 */
   }
-
-  color: ${(props) => (props.isSelected ? "black" : "#ccc")};
+    
+  background-color:${(props) => (props.isSelected ? "#66A3F2" : "white")};
+  color: ${(props) => (props.isSelected ? "white" : "black")};
 `;
 
 const TabList = styled.div`
   display: flex;
   flex-direction: column;
-    border-right: 1px solid gray;
+    border-right: 1px solid #DCEBFF;;
     &:last-child{
-    border-bottom:1px solid gray;}
+    border-bottom:1px solid #DCEBFF;;}
 `;
 
 const TabButton = styled.button`
   width: 150px;
   padding: 12px;
-  font-size: 18px;
-  color: ${(props) => (props.isSelected ? "black" : "#ccc")};
+  font-size: 16px;
+  color: ${(props) => (props.isSelected ? "white" : "black")};
   cursor: pointer;
   text-align: left;
   
-  background-color:white;
+  background-color:${(props) => (props.isSelected ? "#66A3F2" : "white")};
   border:none; 
-    border-bottom: 1px solid gray;
+    border-bottom: 1px solid #DCEBFF;;
 
-  &:hover {
-    background-color: #444;
-    color: white;
-  }
+
 `;
 
 const TabContent = styled.div`
@@ -210,13 +208,13 @@ const TotalPaymentInfo = styled.div`
     display:flex;
     justify-content:space-between;
     padding:10px 30px;
-    border-bottom:1px solid black;
+    border-bottom:1px solid #DCEBFF;
      &:first-child {
-    border-top: 1px solid black;
+    border-top: 1px solid #DCEBFF;
   }
   
-  &:last-child { /* 여기 수정 */
-    background-color: #0B2D59;
+  &:last-child { 
+    background-color: #1E6DFF;
      justify-content:center;
   }
 `;

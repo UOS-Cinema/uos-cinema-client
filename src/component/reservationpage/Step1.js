@@ -46,7 +46,7 @@ const Step1 = () => {
   return (
     <Container>
       <MovieSelection>
-        <Title>영화</Title>
+        {/* <Title>영화</Title> */}
         {movies.map((movie, idx) => (
           <MovieItem
             key={idx}
@@ -58,7 +58,7 @@ const Step1 = () => {
         ))}
       </MovieSelection>
       <TimeSelection>
-        <Title>시간</Title>
+        {/* <Title>시간</Title> */}
         <MonthLabel>{dateRange[0]?.month}월</MonthLabel>
 
         <DateList>
@@ -83,7 +83,7 @@ const Step1 = () => {
               >
                 <div>{dateObj.day}</div>
                 <div>{dateObj.weekday}</div>
-                {isToday && <TodayLabel>오늘</TodayLabel>}
+                {/* {isToday && <TodayLabel>오늘</TodayLabel>} */}
               </DateItem>
             );
           })}
@@ -102,8 +102,12 @@ const Step1 = () => {
                     active={selectedTime === time && selectedMovieWithTime === movie}
                     onClick={() => { setSelectedTime(time); setSelectedMovieWithTime(movie); }}
                   >
-                    <TimeItemSchedule>{time}</TimeItemSchedule>
-                    <TimeItemInfo>188/206
+                    <TimeItemSchedule
+                    active={selectedTime === time && selectedMovieWithTime === movie}
+                    >{time}</TimeItemSchedule>
+                    <TimeItemInfo
+                    active={selectedTime === time && selectedMovieWithTime === movie}
+                    >188/206
                     </TimeItemInfo>
                   </TimeItem>
                 ))}
@@ -119,10 +123,10 @@ const Step1 = () => {
 };
 
 const StyledImg = styled.img`
-  width: 25px;
-  height: 25px;
+  width: 18px;
+  height: 18px;
   border-radius: 5px;
-  margin: 5px 10px;
+  margin-left:12px;
 `;
 
 const Container = styled.div`
@@ -133,52 +137,52 @@ const Container = styled.div`
 
 const TimeSelection = styled.div`
   display:flex;
+  gap: 12px;
   align-items:center;
   flex-direction:column;
-   &:first-of-type {
-    border-right: 10px solid black;
-  }
+  padding: 12px 0;
 `;
 
-const Title = styled.h2`
+const Title = styled.div`
+  display: flex;
+  justify-content:center;
   width: 100%;
   background-color:#1D79F2;;
   color: white;
   text-align: center;
-  font-size: 20px;
-  height:40px;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top:7px;
- 
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 0;
 `;
 
 const MovieSelection = styled.div`
   display: flex;
   flex-direction: column;
-  border-right: 1px solid gray;
+  border-right: 1px solid #DCEBFF;
   align-items: start;
+  padding: 12px 0;
+  
 `;
 
 const MovieItem = styled.div`
   display: flex;
   justify-content: start;
   align-items: center;
-  background: ${({ active }) => (active ? "#1E6DFF" : "#fff")};
+  background: ${({ active }) => (active ? " #66A3F2" : "#fff")};
   color: ${({ active }) => (active ? "white" : "black")};
-  border-bottom: 1px solid #ccc;
+  gap: 6px;
+  width:100%;
   cursor: pointer;
   text-align: center;
-  padding:7px 0;
-  font-size: 16px;
-  font-weight: ${({ active }) => (active ? "bold" : "600")};
+  padding: 12px 0px;
+  font-size: 14px;
+  font-weight: ${({ active }) => (active ? "600" : "400")};
   transition: background 0.3s, color 0.3s, font-weight 0.3s;
-  width: 100%;
-  &:first-of-type {
-    border-top: 1px solid #ccc;
-  }
+  
+
   &:hover {
-    background: ${({ active }) => (active ? "#1E6DFF" : "#f0f0f0")};
+    background: ${({ active }) => (active ? "#66A3F2" : "#f0f0f0")};
+    color: ${({ active }) => (active ? "white" : "black")};
   }
 `;
 
@@ -192,18 +196,15 @@ const TodayLabel = styled.div`
 const DateList = styled.div`
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 8px;
   overflow-x: auto;
-  padding: 10px 0;
-  position: relative;
-  height:100px;
 `;
 
 const ArrowButton = styled.div`
-  font-size: 30px;
+  font-size: 16px;
   cursor: pointer;
-  padding: 10px;
+  padding: 4px;
   border-radius: 50%;
   display: flex;
   text-align:center;
@@ -212,14 +213,13 @@ const ArrowButton = styled.div`
   width:30px;
   height:30px;
   &:hover {
-    background-color: #ddd;
+    background-color: #f0f0f0;
   }
 `;
 
 const MonthLabel = styled.div`
-  font-size: 24px;
+  font-size: 18px;
   font-weight: bold;
-  margin-bottom: 10px;
   display:flex;
   jusify-content:center;
 `;
@@ -233,44 +233,53 @@ const DateItem = styled.div`
   height: 70px;
   cursor: pointer;
   transition: all 0.3s;
-
+  font-size:12px;
+  color: ${({  weekday }) => {
+    if (weekday === "토") return "blue";
+    if (weekday === "일") return "red";
+    return "black";
+  }};
   > div:first-child {
-    font-size: 18px;
-    background: ${({ active }) => (active ? "black" : "transparent")};
-    color: ${({ active, weekday }) => {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    background: ${({ active }) => (active ? "#66A3F2" : "transparent")};
+    color: ${({ active }) => {
       if (active) return "white";
-      if (weekday === "토") return "blue";
-      if (weekday === "일") return "red";
-      return "black";
     }};
     font-weight: ${({ active }) => (active ? "bold" : "normal")};
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 20px;
+    height: 20px;
     text-align: center;
-    padding-top: 10px;
+    padding: 4px;
   }
+
 `;
 
 
 const MovieListWithTime = styled.div`
   display: flex;
   flex-direction:column;
+  align-items:center;
+  gap: 20px;
 `;
 const MovieTitleWithTime = styled.div`
   font-size:20px;
   display:flex;
+  gap: 4px;
   text-algin:center;
   align-items:center;
   font-size:16px;
   font-weight:600;
-  margin:3px 10px;
+
 `;
 const MovieItemWithTime = styled.div`
+  width: 100%;
   border:1px solid #ccc;
   border-radius:15px;
-  margin: 10px 0;
-  
+  padding: 12px;  
 `;
 const Theater = styled.div`
   color:gray;
@@ -284,22 +293,27 @@ const TimeList = styled.div`
   flex-direction:row;
   gap: 10px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr); 
+  grid-template-columns: repeat(4, 1fr); 
 `;
 const TimeItem = styled.div`
+  display: flex;
+  flex-direction:column;
+  align-items:center;
   padding: 10px;
-  background: ${({ active }) => (active ? "#ffe5e5" : "#fff")};
+  background: ${({ active }) => (active ? "#66A3F2" : "#fff")};
   border: 1px solid #ccc;
   cursor: pointer;
   border-radius:10px;
   
 `;
 const TimeItemSchedule = styled.div`
-  font-size:16px;
-  font-weight:bold;
+  font-size:14px;
+  font-weight:500;
+  color:${({ active }) => (active ? "white" : "black")};
 `;
 const TimeItemInfo = styled.div`
   font-size:12px;
-
+  color:grey;
+  color:${({ active }) => (active ? "rgb(255,255,255,0.7)" : "black")};
 `;
 export default Step1;

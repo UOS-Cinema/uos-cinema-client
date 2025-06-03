@@ -26,7 +26,8 @@ const Container = styled.div`
   background-color: white;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid black;
+  border-right: 1px solid  #DCEBFF;
+  border-left: 1px solid  #DCEBFF;
 `;
 
 const Step = styled.div`
@@ -37,8 +38,9 @@ const Step = styled.div`
   justify-content: center;
   flex-direction: column;
   font-weight: ${({ active }) => (active ? "bold" : "normal")};
-  color: ${({ active }) => (active ? "white" : "black")};
+  color: ${({ active, finished }) => 
+    active ? "white" : finished ? "white" : "black"};
   background-color: ${({ active, finished }) => 
-    active ? "#66A3F2" : finished ? "#0B2D59" : "white"};
-  border-bottom: 1px solid black;
+    active ? "#66A3F2" : finished ? "#1E6DFF" : "white"};
+  border-bottom: 1px solid  #DCEBFF;
 `;

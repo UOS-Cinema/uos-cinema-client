@@ -12,7 +12,7 @@ const BookingPage = () => {
     };
     return (
         <Container>
-            <Navbar underline={false}/>
+            <Navbar underline={true}/>
             <BodyContainer>
                 <StepIndicator step={step} />
                 <ContentArea>
@@ -45,12 +45,14 @@ export default BookingPage;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  height:100%;
 `;
 
 const BodyContainer = styled.div`
     display: flex;
     flex: 1;
     margin: 0 10%;
+     border-bottom: 1px solid  #DCEBFF;
 `;
 
 const ContentArea = styled.div`
@@ -73,6 +75,6 @@ const NextButton = styled.button`
   background-color: #66A3F2;
 
   &:hover {
-    background-color: #0B2D59;
+    background-color: #1E6DFF;
   }`
 ;
