@@ -4,13 +4,22 @@ import logo from '../../asset/logo.svg';
 import { Link } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import { FaSearch } from "react-icons/fa";
+
+const primaryBlue = '#1E6DFF';
+const lightGray = '#eee';
+const mediumGray = '#ccc';
+const darkGray = '#333';
+const textGray = '#555';
+
 const NavbarContainer = styled.nav`
-  padding: 20px 10%;
+  padding: 15px 10%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: ${({ underline }) => (underline ? '2px solid #1E6DFF' : 'none')};
+  border-bottom: ${({ underline }) => (underline ? `3px solid ${primaryBlue}` : 'none')};
   position: relative;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle shadow for depth */
 `;
 
 const Menu = styled.ul`
@@ -27,18 +36,20 @@ const MenuItem = styled.li`
   align-items: center;
   justify-content: center;
   min-width: 100px;
-  height: 30px;
+  height: 40px; /* Slightly taller for better touch targets */
   text-align: center;
   cursor: pointer;
-  transition: color 0.2s ease;
-  border-right: 1px solid #ccc;
+  transition: all 0.3s ease; /* Smoother transitions */
+  border-right: 1px solid ${mediumGray};
+  font-size: 16px; /* Increased font size */
 
   &:first-child {
-    border-left: 1px solid #ccc;
+    border-left: 1px solid ${mediumGray};
   }
 
   &:hover {
-    color: #1D79F2;
+    color: ${primaryBlue};
+    background-color: ${lightGray}; /* Slight background change on hover */
   }
 
   &:hover > ul {
@@ -52,81 +63,85 @@ const StyledLink = styled(Link)`
   justify-content: center;
   text-decoration: none;
   color: inherit;
+  width: 100%; /* Make link fill the MenuItem */
+  height: 100%;
 
   &:visited {
     color: inherit;
   }
 `;
 
-// 드롭다운 메뉴
 const DropdownMenu = styled.ul`
   display: none;
   position: absolute;
   top: 100%;
-  left: 0;
-  min-width: 80px;
+  left: -1px; /* Adjust to align with parent's left border */
+  min-width: calc(100% + 2px); /* Match parent width + borders */
   background: white;
- 
   list-style: none;
   padding: 0;
   margin: 0;
   z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Shadow for dropdown */
+  border: 1px solid ${mediumGray}; /* Consistent border */
 
   li {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px; /* Increased padding */
     text-align: center;
     cursor: pointer;
-   
     background-color: white;
-    border:1px solid #ccc;
+    font-size: 15px; /* Consistent font size */
+    border-bottom: 1px solid ${lightGray}; /* Separator for list items */
+
+    &:last-child {
+        border-bottom: none;
+    }
+
     &:hover {
-      background-color: #f1f1f1;
-      
+      background-color: ${lightGray};
+      color: ${primaryBlue};
     }
   }
-
-  li:last-child {
-   
-  }
 `;
+
 const SearchBar = styled.input`
-  width: 300px;
-  height: 32px;
+  width: 250px; /* Slightly smaller for better balance */
+  height: 38px; /* Taller for better input experience */
+  padding: 0 15px;
+  border: none; /* Remove default border */
+  border-radius: 19px; /* Half of height for perfect pill shape */
+  font-size: 15px;
+  outline: none;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 
-  margin: 0 40px;
-  border: 1px solid #ccc;
-  border-radius: 16px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s ease;
-border: none;
-  outline: none;
-  &:focus {
-    border-color: #1E6DFF;
-  }
+
 `;
-
-
 
 const Button = styled.button`
-  padding: 8px 16px;
-  background-color: white;
-  color: gray;
+  padding: 0 15px; /* Adjust padding */
+  background-color: white; /* Match SearchContainer background */
+  color: ${textGray};
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: 0 19px 19px 0; /* Only right side rounded */
+  font-size: 18px; /* Larger icon */
   cursor: pointer;
+  height: 38px;
+  transition: color 0.2s ease; /* Smooth color transition */
 
+  &:hover {
+    color: ${primaryBlue}; /* Blue on hover */
+  }
 `;
 
 const SearchContainer = styled.div`
-  border: 1px solid #ccc;
-  border-radius: 100px;
-  padding: 5px;
+  border: 1px solid ${mediumGray};
+  border-radius: 20px; /* Rounded search container */
   display: flex;
-  max-width: 500px;
-
+  align-items: center;
+  max-width: 400px;
+  background-color: white;
+  overflow: hidden; /* Ensures content respects border-radius */
 `;
 
 const Navbar = ({ underline }) => {
@@ -134,7 +149,7 @@ const Navbar = ({ underline }) => {
   return (
     <NavbarContainer underline={underline}>
       <Link to="/">
-        <img src={logo} alt="logo" />
+        <img src={logo} alt="logo" style={{ height: '40px' }} /> {/* Adjust logo size */}
       </Link>
       <SearchContainer>
         <SearchBar type="text" placeholder="영화 제목을 검색하세요" />
@@ -222,7 +237,6 @@ const Navbar = ({ underline }) => {
           </MenuItem>
         </Menu>
       }
-
     </NavbarContainer>
   );
 };
