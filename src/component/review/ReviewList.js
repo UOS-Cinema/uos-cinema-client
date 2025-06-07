@@ -1,83 +1,92 @@
-// src/component/movie/ReviewsList.js
 import React from 'react';
 import styled from 'styled-components';
+import { FaStar } from 'react-icons/fa';
 
-import ReviewItem from './ReviewItem';
-const sampleReviews = [
-    // Reviews for movie with id 1 (e.g., 올드보이)
-    {
-        id: 1,
-        movieId: 1,
-        user: '영화광팬123',
-        timestamp: '2024-03-14T10:30:00Z',
-        comment: '정말 충격적이고 대단한 영화입니다. 최민식 배우의 연기는 압권!',
-        rating: 5,
-    },
-    {
-        id: 2,
-        movieId: 1,
-        user: '시네필B',
-        timestamp: '2024-03-15T14:20:00Z',
-        comment: '미장센과 스토리가 완벽하게 어우러진 작품. 다시 봐도 새롭다.',
-        rating: 5,
-    },
-    {
-        id: 3,
-        movieId: 1,
-        user: '무비러버7',
-        timestamp: '2024-03-13T09:00:00Z',
-        comment: '조금 보기 힘들었지만, 영화가 주는 메시지는 강렬했어요.',
-        rating: 4,
-    },
-    // Reviews for another movie (if you have one with id 2 in movies.js)
-    {
-        id: 4,
-        movieId: 2, // Assuming you have a movie with id 2
-        user: 'PopcornLover',
-        timestamp: '2024-03-10T18:00:00Z',
-        comment: '생각보다 평범했어요. 기대에는 못 미쳤네요.',
-        rating: 3,
-    },
-    {
-        id: 5,
-        movieId: 2,
-        user: '익명관람객',
-        timestamp: '2024-03-12T22:15:00Z',
-        comment: '킬링타임용으로는 괜찮습니다.',
-        rating: 3,
-    }
-];
-const ReviewsContainer = styled.div`
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-`;
-
-const NoReviewsText = styled.p`
-    text-align: center;
-    color: #777;
-    padding: 20px;
-`;
-
-const ReviewsList = ({ movieId }) => {
-    // Filter reviews for the current movie
-    const movieReviews = sampleReviews.filter(review => review.movieId === movieId);
-
-    // Sort reviews by timestamp (latest first)
-    const sortedReviews = [...movieReviews].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    if (sortedReviews.length === 0) {
-        return <NoReviewsText>아직 등록된 관람평이 없습니다.</NoReviewsText>;
-    }
-
+// 별점 표시를 위한 컴포넌트
+const StarRating = ({ rating }) => {
     return (
-        <ReviewsContainer>
-            {sortedReviews.map(review => (
-                <ReviewItem key={review.id} review={review} />
+        <StarContainer>
+            {[...Array(5)].map((_, index) => (
+                <FaStar key={index} color={index < rating ? '#ffc107' : '#e4e5e9'} />
             ))}
-        </ReviewsContainer>
+        </StarContainer>
+    );
+};
+
+const ReviewsList = ({ reviews }) => {
+    return (
+        <ReviewContainer>
+            {reviews.length > 0 ? (
+                reviews.map(review => (
+                    <ReviewItem key={review.id}>
+                        <ReviewHeader>
+                            <UserInfo>
+                                <strong>{review.user}</strong>
+                                <StarRating rating={review.rating} />
+                            </UserInfo>
+                            <Timestamp>{new Date(review.timestamp).toLocaleDateString()}</Timestamp>
+                        </ReviewHeader>
+                        <Comment>{review.comment}</Comment>
+                    </ReviewItem>
+                ))
+            ) : (
+                <p>작성된 관람평이 없습니다.</p>
+            )}
+        </ReviewContainer>
     );
 };
 
 export default ReviewsList;
+
+// --- Styled Components ---
+
+const ReviewContainer = styled.div`
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+`;
+
+const ReviewItem = styled.div`
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+`;
+
+const ReviewHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+`;
+
+const UserInfo = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    strong {
+        font-size: 16px;
+        font-weight: 700;
+    }
+`;
+
+const Timestamp = styled.span`
+    font-size: 14px;
+    color: #868e96;
+`;
+
+const Comment = styled.p`
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+`;
+
+const StarContainer = styled.div`
+    display: flex;
+    gap: 2px;
+    svg {
+        font-size: 16px;
+    }
+`;

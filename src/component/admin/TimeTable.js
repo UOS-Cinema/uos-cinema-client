@@ -1,34 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiEdit } from "react-icons/fi";
-import { MdDeleteOutline } from "react-icons/md";
-const sampleSchedule = [
-    {
-        movie: "야당",
-        startTime: "12:15",
-        runningTime: 135
-    },
-    {
-        movie: "파과",
-        startTime: "17:45",
-        runningTime: 120
-    }
-];
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 
+// --- 목업 데이터 ---
+const sampleSchedule = [
+    { movie: "야당", startTime: "02:45", runningTime: 135 },
+    { movie: "파과", startTime: "06:00", runningTime: 120 }
+];
+// --- 목업 데이터 끝 ---
+
+// 시간 <-> 인덱스 변환 유틸리티
 const formatTime = (index) => {
-    const totalMinutes = index * 15;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const hours = Math.floor(index / 4).toString().padStart(2, '0');
+    return `${hours}:00`;
 };
 const getEndTime = (startTime, runningTime) => {
     const [h, m] = startTime.split(':').map(Number);
-    const totalStartMinutes = h * 60 + m;
-    const totalEndMinutes = totalStartMinutes + runningTime;
-
+    const totalEndMinutes = h * 60 + m + runningTime;
     const endHour = Math.floor(totalEndMinutes / 60) % 24;
     const endMinute = totalEndMinutes % 60;
-
     return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
 };
 const timeToIndex = (time) => {
@@ -36,207 +26,179 @@ const timeToIndex = (time) => {
     return Math.floor((h * 60 + m) / 15);
 };
 
-const TimeTable = () => {
-    const totalSlots = 96; // 24시간, 15분 단위
-    const [selectedMovie, setSelectedMovie] = useState("야당");
-    const [hoverStart, setHoverStart] = useState(null);
-    const [hoverDuration, setHoverDuration] = useState(null);
-    const [hoverText, setHoverText] = useState(null);
-    const [schedule, setSchedule] = useState(sampleSchedule); // schedule state
-    const [slotOccupied, setSlotOccupied] = useState(() => {
+const TimeTable = ({ selectedMovie }) => {
+    const totalSlots = 96; // 24시간 * (60분 / 15분)
+    const [schedule, setSchedule] = useState(sampleSchedule);
+    const [slotOccupied, setSlotOccupied] = useState([]);
+    const [hoverInfo, setHoverInfo] = useState({ start: null, duration: 0 });
+
+    useEffect(() => {
         const occupied = new Array(totalSlots).fill(false);
         schedule.forEach(item => {
             const start = timeToIndex(item.startTime);
             const length = Math.ceil(item.runningTime / 15);
             for (let i = start; i < start + length; i++) {
-                occupied[i] = true;
+                if (i < totalSlots) occupied[i] = true;
             }
         });
-        return occupied;
-    });
-    const handleMouseEnter = (startIndex, duration, movieTitle) => {
-        setHoverStart(startIndex);
-        setHoverDuration(duration);
-        setHoverText(movieTitle);
-    };
-    const handleMouseLeave = () => {
-        setHoverStart(null);
-        setHoverDuration(null);
-    };
-    const handleSlotClick = (startIndex) => {
+        setSlotOccupied(occupied);
+    }, [schedule]);
 
-        const startTime = formatTime(startIndex); // hoverStart를 시간 형식으로 변환
-        const duration = Math.ceil(135 / 15);
+    const handleMouseEnter = (startIndex) => {
+        if (selectedMovie) {
+            const duration = Math.ceil(selectedMovie.runningTime / 15);
+            setHoverInfo({ start: startIndex, duration });
+        }
+    };
+    
+    const handleMouseLeave = () => setHoverInfo({ start: null, duration: 0 });
+
+    const handleSlotClick = (startIndex) => {
+        if (!selectedMovie) {
+            alert("먼저 영화를 선택해주세요.");
+            return;
+        }
+        const duration = Math.ceil(selectedMovie.runningTime / 15);
         for (let i = startIndex; i < startIndex + duration; i++) {
             if (slotOccupied[i]) {
-                alert("이미 영화가 존재하는 시간입니다.");
+                alert("이미 다른 상영 일정이 있는 시간대입니다.");
                 return;
             }
         }
-        const newMovie = {
-            movie: "야당",  // 임의로 "야당" 영화 정보 추가
-            startTime: startTime,
-            runningTime: 135  // 고정된 러닝타임, 예시로 135분
+        const newSchedule = {
+            movie: selectedMovie.title,
+            startTime: `${Math.floor(startIndex/4).toString().padStart(2, '0')}:${(startIndex % 4 * 15).toString().padStart(2, '0')}`,
+            runningTime: selectedMovie.runningTime
         };
-        setSchedule((prevSchedule) => [...prevSchedule, newMovie]); // 새로운 영화 추가
-        setSlotOccupied(prev => {
-            const updated = [...prev];
-            for (let i = startIndex; i < startIndex + duration; i++) {
-                updated[i] = true;
-            }
-            return updated;
-        });
+        setSchedule(prev => [...prev, newSchedule].sort((a,b) => timeToIndex(a.startTime) - timeToIndex(b.startTime)));
     };
+
     return (
-        <TimeTableWrapper>
-            <ScheduleColumn>
-                {[...Array(totalSlots)].map((_, i) => {
-                    const showTime = i % 4 === 0;
-                    return (
-                        <TimeSlotRow
-                            key={i}
-                            onMouseEnter={() => handleMouseEnter(i, 9, "야당")}  // 임의로 1슬롯씩 hover
-                            onMouseLeave={handleMouseLeave}
-                            onClick={() => handleSlotClick(hoverStart)}
-                        >
-                            <TimeText>{showTime ? formatTime(i) : ''}</TimeText>
-                            <SlotBox hoverStart={hoverStart} hoverDuration={hoverDuration} startIndex={i} hoverText={hoverText} />
-                        </TimeSlotRow>
-                    );
-                })}
+        <TimeTableWrapper onMouseLeave={handleMouseLeave}>
+            {[...Array(totalSlots)].map((_, i) => (
+                <TimeSlotRow key={i}>
+                    {i % 4 === 0 && <TimeText>{formatTime(i)}</TimeText>}
+                    <SlotBox onMouseEnter={() => handleMouseEnter(i)} onClick={() => handleSlotClick(i)} />
+                </TimeSlotRow>
+            ))}
 
-                {schedule.map((schedule, i) => {
-                    const startIndex = timeToIndex(schedule.startTime);
-                    const duration = Math.ceil(schedule.runningTime / 15);
-                    const endTime = getEndTime(schedule.startTime, schedule.runningTime);
-                    return (
-                        <MovieBlock
-                            key={i}
-                            isSelected={selectedMovie === schedule.movie}
-                            startIndex={startIndex}
-                            duration={duration}
-                        >
-                            <ButtonGroup>
-                                {schedule.movie}
-                                {selectedMovie === schedule.movie &&
-                                    <EditButton ><FiEdit />  </EditButton>
-                                }
-                                {selectedMovie === schedule.movie &&
-                                    <DeleteButton ><MdDeleteOutline /></DeleteButton>
-                                }
-                            </ButtonGroup>
-                            <div>{schedule.startTime}~{endTime}</div>
+            {schedule.map((item, i) => {
+                const start = timeToIndex(item.startTime);
+                const duration = Math.ceil(item.runningTime / 15);
+                const end = getEndTime(item.startTime, item.runningTime);
+                const isSelected = selectedMovie && item.movie === selectedMovie.title;
 
-                        </MovieBlock>
-                    );
-                })}
-            </ScheduleColumn>
-
+                return (
+                    <MovieBlock key={i} startIndex={start} duration={duration} isSelected={isSelected}>
+                        <MovieInfo isSelected={isSelected}>
+                            <strong>{item.movie}</strong>
+                            <span>{item.startTime} ~ {end}</span>
+                        </MovieInfo>
+                        <MovieBlockButtons>
+                            <button><FiEdit /></button>
+                            <button><FiTrash2 /></button>
+                        </MovieBlockButtons>
+                    </MovieBlock>
+                );
+            })}
+            
+            {hoverInfo.start !== null && (
+                 <MovieBlock as="div" startIndex={hoverInfo.start} duration={hoverInfo.duration} isHover>
+                     <MovieInfo>
+                        <strong>{selectedMovie.title}</strong>
+                     </MovieInfo>
+                 </MovieBlock>
+            )}
         </TimeTableWrapper>
     );
 };
 
-const ButtonGroup = styled.div`
-  display: flex;
+export default TimeTable;
 
-  
-  gap: 8px;
-`;
 
-const EditButton = styled.button`
-  background-color: inherit;
-    border:none;
-  color: white;
- 
-  border-radius: 6px;
-  
-  cursor: pointer;
-`;
-
-const DeleteButton = styled.button`
-  background-color: inherit;
-    border:none;
-  color: white;
-  
-  border-radius: 6px;
- 
-  cursor: pointer;
-`;
+// --- STYLED COMPONENTS ---
+const primaryBlue = '#1E6DFF';
+const lightBlue = '#a5d8ff';
+const darkTextForLightBg = '#1864ab';
 
 const TimeTableWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
   position: relative;
-  border:1px solid gray;
-  padding-top:1px;
-`;
-
-
-
-
-
-
-
-const ScheduleColumn = styled.div`
-  position: relative;
-  width: 200px;
+  height: 100%;
 `;
 
 const TimeSlotRow = styled.div`
   display: flex;
   align-items: center;
-  height: 15px;
-  position: relative;
+  height: 20px; 
 `;
 
 const TimeText = styled.div`
   width: 50px;
-  font-size: 11px;
-  color: #666;
+  font-size: 12px;
+  color: #adb5bd;
   text-align: right;
-  padding-right: 5px;
+  padding-right: 10px;
+  position: relative;
+  top: -10px;
 `;
-
 
 const SlotBox = styled.div`
   flex: 1;
   height: 100%;
-
-  position: relative;
-  background-color: ${({ hoverStart, hoverDuration, startIndex, duration }) =>
-        hoverStart !== null && hoverStart <= startIndex && hoverStart + hoverDuration > startIndex
-            ? "rgba(255, 99, 71, 0.7)"  // hover 시 색상 변화
-            : "transparent"};
-  border: ${({ hoverStart, hoverDuration, startIndex, duration }) =>
-        hoverStart !== null && hoverStart <= startIndex && hoverStart + hoverDuration > startIndex
-            ? "none"  // hover 시 색상 변화
-            : "1px solid #eee"};
-  &::after {
-    content: ${({ hoverText, hoverStart, startIndex }) => hoverText && hoverStart === startIndex ? `"${hoverText}"` : '""'};
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-  }
+  border-top: 1px solid #f1f3f5;
+  box-sizing: border-box;
+  cursor: pointer;
 `;
 
 const MovieBlock = styled.div`
   position: absolute;
-  left: 55px; /* 시간 텍스트 너비 + padding 고려 */
-  width: calc(100% - 55px);
-  height: ${({ duration }) => duration * 15}px;
-  top: ${({ startIndex }) => startIndex * 15}px;
-  background-color:${({ isSelected }) => (isSelected ? "#1E6DFF" : "rgba(128, 128, 128, 0.6)")};
-    padding:5px 5px;
-  color: white;
-  font-size: 12px;
-
-
+  left: 50px;
+  width: calc(100% - 50px);
+  top: ${({ startIndex }) => startIndex * 20}px;
+  height: ${({ duration }) => duration * 20 - 2}px;
+  margin-top: 1px;
+  background-color: ${({ isSelected, isHover }) => 
+    isHover ? 'rgba(30, 109, 255, 0.5)' : 
+    isSelected ? primaryBlue : lightBlue};
   border-radius: 4px;
+  padding: 8px 12px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: ${({isHover}) => isHover ? 'none' : 'all 0.2s ease'};
+  z-index: ${({ isHover }) => isHover ? 5 : 10};
+  pointer-events: ${({ isHover }) => isHover ? 'none' : 'auto'};
 `;
 
-export default TimeTable;
+const MovieInfo = styled.div`
+    color: ${({ isSelected }) => (isSelected ? 'white' : darkTextForLightBg)};
+    strong {
+        font-weight: 700;
+        font-size: 14px;
+    }
+    span {
+        display: block;
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 4px;
+    }
+`;
+
+const MovieBlockButtons = styled.div`
+    align-self: flex-end;
+    display: flex;
+    gap: 4px;
+    button {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+`;

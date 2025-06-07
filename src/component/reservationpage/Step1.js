@@ -1,227 +1,227 @@
-import styled from "styled-components";
-import { useState } from "react";
-import age15 from '../../asset/age15.png';
+import React, { useState } from 'react';
+import styled, { keyframes } from 'styled-components';
+
+// 컴포넌트가 나타날 때의 페이드인 애니메이션
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const Step1 = () => {
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedMovieWithTime, setSelectedMovieWithTime] = useState(null);
-  const movies = ["야당", "승부", "바이러스", "플로우즈"];
-  const times = ["14:45", "15:40", "16:30", "17:20", "18:25", "20:30", "23:15", "23:30"];
-  const today = new Date();
-  const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
+    // 상태 관리: 선택된 영화, 날짜, 시간
+    const [selectedMovie, setSelectedMovie] = useState("야당");
+    const [selectedDate, setSelectedDate] = useState(new Date().getDate().toString());
+    const [selectedTime, setSelectedTime] = useState(null);
 
-  // 현재 날짜부터 7일치 날짜 배열 생성
-  const getDateRange = (startDate) => {
-    const year = startDate.getFullYear();  // startDate의 연도 추출
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i); // 날짜 조정
-      return {
-        year: year,                        // 연도를 포함
-        day: date.getDate().toString(),     // 날짜
-        weekday: daysKor[date.getDay()],    // 요일
-        month: date.getMonth() + 1,         // 월 (0부터 시작하므로 +1)
-      };
-    });
-  };
-  const [dateRange, setDateRange] = useState(getDateRange(today));
-  const handlePrevWeek = () => {
-    const firstDate = dateRange[0];
-    const { year, month, day } = firstDate;
-    const newStartDate = new Date(year, month - 1, day);
-    newStartDate.setDate(newStartDate.getDate() - 1);
-    setDateRange(getDateRange(newStartDate));
-  };
+    // 목업 데이터
+    const movies = ["야당", "승부", "바이러스", "플로우즈"];
+    const times = ["14:45", "15:40", "16:30", "17:20", "18:25", "20:30", "23:15", "23:30"];
+    const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
+    const today = new Date();
 
-  const handleNextWeek = () => {
-    const firstDate = dateRange[0];
-    const { year, month, day } = firstDate;
-    const newStartDate = new Date(year, month - 1, day);
-    newStartDate.setDate(newStartDate.getDate() + 1);
-    setDateRange(getDateRange(newStartDate));
-  };
+    // 오늘부터 7일간의 날짜 배열을 생성하는 함수
+    const getDateRange = (startDate) => {
+        const year = startDate.getFullYear();
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            return {
+                year: year,
+                month: date.getMonth() + 1,
+                day: date.getDate().toString(),
+                weekday: daysKor[date.getDay()],
+            };
+        });
+    };
+    
+    // 날짜 범위 상태 관리
+    const [dateRange, setDateRange] = useState(getDateRange(today));
 
-  return (
-    <Container>
-      <MovieSelection>
-        {/* <Title>영화</Title> */}
-        {movies.map((movie, idx) => (
-          <MovieItem
-            key={idx}
-            active={selectedMovie === movie}
-            onClick={() => setSelectedMovie(movie)}
-          >
-            <StyledImg src={age15} />{movie}
-          </MovieItem>
-        ))}
-      </MovieSelection>
-      <TimeSelection>
-        {/* <Title>시간</Title> */}
-        <MonthLabel>{dateRange[0]?.month}월</MonthLabel>
+    // 날짜 이동 핸들러 (이전/다음)
+    const handleDateNav = (direction) => {
+        const newStartDate = new Date(dateRange[0].year, dateRange[0].month - 1, dateRange[0].day);
+        newStartDate.setDate(newStartDate.getDate() + direction);
+        setDateRange(getDateRange(newStartDate));
+    };
 
-        <DateList>
-          <ArrowButton onClick={handlePrevWeek}>{"<"}</ArrowButton>
-          {dateRange.map((dateObj, idx) => {
-            // today 객체 생성 (년, 월, 일만 비교)
-            const todayDate = new Date();
-            todayDate.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정하여 날짜만 비교
-
-            // dateObj를 새로운 Date 객체로 변환
-            const dateToCompare = new Date(dateObj.year, dateObj.month - 1, dateObj.day);
-            dateToCompare.setHours(0, 0, 0, 0);  // dateObj도 시간을 00:00:00으로 설정
-
-            const isToday = dateToCompare.getTime() === todayDate.getTime();
-
-            return (
-              <DateItem
-                key={idx}
-                active={selectedDate === dateObj.day}
-                weekday={dateObj.weekday}
-                onClick={() => setSelectedDate(dateObj.day)}
-              >
-                <div>{dateObj.day}</div>
-                <div>{dateObj.weekday}</div>
-                {/* {isToday && <TodayLabel>오늘</TodayLabel>} */}
-              </DateItem>
-            );
-          })}
-          <ArrowButton onClick={handleNextWeek}>{">"}</ArrowButton>
-        </DateList>
-        <MovieListWithTime>
-
-          {movies.map((movie, idx) => (
-            <MovieItemWithTime key={idx}>
-              <MovieTitleWithTime><StyledImg src={age15} />{movie}</MovieTitleWithTime>
-              <Theater>상영관1 - 2D</Theater>
-              <TimeList>
-                {times.map((time, idx) => (
-                  <TimeItem
-                    key={idx}
-                    active={selectedTime === time && selectedMovieWithTime === movie}
-                    onClick={() => { setSelectedTime(time); setSelectedMovieWithTime(movie); }}
-                  >
-                    <TimeItemSchedule
-                    active={selectedTime === time && selectedMovieWithTime === movie}
-                    >{time}</TimeItemSchedule>
-                    <TimeItemInfo
-                    active={selectedTime === time && selectedMovieWithTime === movie}
-                    >188/206
-                    </TimeItemInfo>
-                  </TimeItem>
+    return (
+        <Step1Container>
+            {/* 왼쪽: 영화 선택 패널 */}
+            <MovieSelection>
+                <SectionTitle>영화 선택</SectionTitle>
+                {movies.map((movie, idx) => (
+                    <MovieItem
+                        key={idx}
+                        active={selectedMovie === movie}
+                        onClick={() => {
+                            setSelectedMovie(movie);
+                            setSelectedTime(null); // 영화 변경 시 시간 선택 초기화
+                        }}
+                    >
+                        <StyledImg src={`https://placehold.co/24x24/E8A2A2/FFFFFF?text=15`} alt="15세 이용가" />
+                        {movie}
+                    </MovieItem>
                 ))}
-              </TimeList>
-            </MovieItemWithTime>
-          ))}
+            </MovieSelection>
 
-        </MovieListWithTime>
+            {/* 오른쪽: 날짜 및 시간 선택 패널 */}
+            <TimeSelection>
+                <DateSelectionWrapper>
+                    <MonthLabel>{dateRange[0]?.month}월</MonthLabel>
+                    <DateList>
+                        <ArrowButton onClick={() => handleDateNav(-1)}>{"<"}</ArrowButton>
+                        {dateRange.map((dateObj, idx) => (
+                            <DateItem
+                                key={idx}
+                                active={selectedDate === dateObj.day}
+                                weekday={dateObj.weekday}
+                                onClick={() => setSelectedDate(dateObj.day)}
+                            >
+                                <DateDay active={selectedDate === dateObj.day}>{dateObj.day}</DateDay>
+                                <DateWeekday>{dateObj.weekday}</DateWeekday>
+                            </DateItem>
+                        ))}
+                        <ArrowButton onClick={() => handleDateNav(1)}>{">"}</ArrowButton>
+                    </DateList>
+                </DateSelectionWrapper>
 
-      </TimeSelection>
-    </Container>
-  );
+                <MovieListWithTime>
+                    {selectedMovie ? (
+                        <MovieItemWithTime key={selectedMovie}>
+                            <MovieTitleWithTime>
+                                <StyledImg src={`https://placehold.co/24x24/E8A2A2/FFFFFF?text=15`} alt="15세 이용가" />
+                                {selectedMovie}
+                            </MovieTitleWithTime>
+                            <Theater>상영관 1 • 2D</Theater>
+                            <TimeList>
+                                {times.map((time, idx) => (
+                                    <TimeItem
+                                        key={idx}
+                                        active={selectedTime === time}
+                                        onClick={() => setSelectedTime(time)}
+                                    >
+                                        <TimeItemSchedule active={selectedTime === time}>{time}</TimeItemSchedule>
+                                        <TimeItemInfo active={selectedTime === time}>188/206</TimeItemInfo>
+                                    </TimeItem>
+                                ))}
+                            </TimeList>
+                        </MovieItemWithTime>
+                    ) : (
+                        <Placeholder>영화를 먼저 선택해주세요.</Placeholder>
+                    )}
+                </MovieListWithTime>
+            </TimeSelection>
+        </Step1Container>
+    );
 };
 
-const StyledImg = styled.img`
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  margin-left:12px;
-`;
 
-const Container = styled.div`
+// --- STYLED COMPONENTS ---
+
+const Step1Container = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 300px 1fr;
   width: 100%;
+  height: 100%;
+  animation: ${fadeIn} 0.6s ease-out;
 `;
 
-const TimeSelection = styled.div`
-  display:flex;
-  gap: 12px;
-  align-items:center;
-  flex-direction:column;
-  padding: 12px 0;
-`;
-
-const Title = styled.div`
-  display: flex;
-  justify-content:center;
-  width: 100%;
-  background-color:#1D79F2;;
-  color: white;
-  text-align: center;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 12px 0;
+const SectionTitle = styled.h2`
+  font-size: 18px;
+  font-weight: 700;
+  color: #343a40;
+  padding: 20px 24px;
+  margin: 0;
+  border-bottom: 1px solid #e9ecef;
 `;
 
 const MovieSelection = styled.div`
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #DCEBFF;
-  align-items: start;
-  padding: 12px 0;
-  
+  background-color: #fff;
+  border-right: 1px solid #e9ecef;
+  padding-top: 16px;
 `;
 
 const MovieItem = styled.div`
   display: flex;
-  justify-content: start;
   align-items: center;
-  background: ${({ active }) => (active ? " #66A3F2" : "#fff")};
-  color: ${({ active }) => (active ? "white" : "black")};
-  gap: 6px;
-  width:100%;
+  gap: 12px;
   cursor: pointer;
-  text-align: center;
-  padding: 12px 0px;
-  font-size: 14px;
-  font-weight: ${({ active }) => (active ? "600" : "400")};
-  transition: background 0.3s, color 0.3s, font-weight 0.3s;
-  
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: ${({ active }) => (active ? "700" : "500")};
+  color: ${({ active }) => (active ? "#1E6DFF" : "#343a40")};
+  background: ${({ active }) => (active ? "#eff6ff" : "transparent")};
+  border-right: ${({ active }) => (active ? "3px solid #1E6DFF" : "3px solid transparent")};
+  transition: all 0.3s ease;
 
   &:hover {
-    background: ${({ active }) => (active ? "#66A3F2" : "#f0f0f0")};
-    color: ${({ active }) => (active ? "white" : "black")};
+    background: #f8f9fa;
+    border-right-color: #66A3F2;
   }
 `;
 
-const TodayLabel = styled.div`
-  font-size: 10px;
-  color: #888;
-  position: absolute;   /* 부모 요소를 기준으로 위치 조정 */
+const StyledImg = styled.img`
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+`;
 
+const TimeSelection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background-color: #f8f9fa;
+  overflow-y: auto;
+`;
+
+const DateSelectionWrapper = styled.div`
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 `;
 
 const DateList = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
-  overflow-x: auto;
 `;
 
 const ArrowButton = styled.div`
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
-  padding: 4px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
-  text-align:center;
   align-items: center;
   justify-content: center;
-  width:30px;
-  height:30px;
+  color: #868e96;
+  transition: all 0.3s ease;
+
   &:hover {
-    background-color: #f0f0f0;
+    background-color: #f1f3f5;
+    color: #343a40;
   }
 `;
 
 const MonthLabel = styled.div`
-  font-size: 18px;
-  font-weight: bold;
-  display:flex;
-  jusify-content:center;
+  font-size: 22px;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #343a40;
 `;
 
 const DateItem = styled.div`
@@ -229,91 +229,119 @@ const DateItem = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 60px;
   height: 70px;
   cursor: pointer;
   transition: all 0.3s;
-  font-size:12px;
-  color: ${({  weekday }) => {
-    if (weekday === "토") return "blue";
-    if (weekday === "일") return "red";
-    return "black";
-  }};
-  > div:first-child {
-    display:flex;
+  border-radius: 8px;
+  gap: 8px;
+  color: ${({ weekday }) => (weekday === "토" ? "#007bff" : weekday === "일" ? "#dc3545" : "#495057")};
+
+  &:hover {
+      background-color: #f8f9fa;
+  }
+`;
+
+const DateWeekday = styled.div`
+    font-size: 14px;
+    font-weight: 500;
+`;
+
+const DateDay = styled.div`
+    font-size: 20px;
+    font-weight: 700;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    transition: all 0.3s ease;
     background: ${({ active }) => (active ? "#66A3F2" : "transparent")};
-    color: ${({ active }) => {
-      if (active) return "white";
-    }};
-    font-weight: ${({ active }) => (active ? "bold" : "normal")};
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    text-align: center;
-    padding: 4px;
-  }
-
+    color: ${({ active }) => (active ? "white" : "inherit")};
 `;
-
 
 const MovieListWithTime = styled.div`
+  flex: 1;
   display: flex;
-  flex-direction:column;
-  align-items:center;
-  gap: 20px;
+  flex-direction: column;
+  min-height: 0;
 `;
-const MovieTitleWithTime = styled.div`
-  font-size:20px;
-  display:flex;
-  gap: 4px;
-  text-algin:center;
-  align-items:center;
-  font-size:16px;
-  font-weight:600;
 
-`;
 const MovieItemWithTime = styled.div`
   width: 100%;
-  border:1px solid #ccc;
-  border-radius:15px;
-  padding: 12px;  
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  animation: ${fadeIn} 0.5s ease;
 `;
-const Theater = styled.div`
-  color:gray;
-  margin:0 20px;
-  font-size:12px;
 
-`
-const TimeList = styled.div`
-  margin:15px 20px;
+const MovieTitleWithTime = styled.div`
+  font-size: 20px;
+  font-weight: 700;
   display: flex;
-  flex-direction:row;
-  gap: 10px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); 
+  gap: 8px;
+  align-items: center;
+  color: #212529;
 `;
+
+const Theater = styled.div`
+  color: #868e96;
+  margin: 4px 0 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const TimeList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+`;
+
 const TimeItem = styled.div`
   display: flex;
-  flex-direction:column;
-  align-items:center;
-  padding: 10px;
-  background: ${({ active }) => (active ? "#66A3F2" : "#fff")};
-  border: 1px solid #ccc;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: ${({ active }) => (active ? "#1E6DFF" : "#f8f9fa")};
+  border: 1px solid ${({ active }) => (active ? "#1E6DFF" : "#dee2e6")};
   cursor: pointer;
-  border-radius:10px;
-  
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    border-color: #66A3F2;
+  }
 `;
+
 const TimeItemSchedule = styled.div`
-  font-size:14px;
-  font-weight:500;
-  color:${({ active }) => (active ? "white" : "black")};
+  font-size: 16px;
+  font-weight: 700;
+  color: ${({ active }) => (active ? "white" : "#343a40")};
+  transition: color 0.3s ease;
 `;
+
 const TimeItemInfo = styled.div`
-  font-size:12px;
-  color:grey;
-  color:${({ active }) => (active ? "rgb(255,255,255,0.7)" : "black")};
+  font-size: 12px;
+  color: ${({ active }) => (active ? "rgba(255, 255, 255, 0.8)" : "#868e96")};
+  transition: color 0.3s ease;
 `;
+
+const Placeholder = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 18px;
+    color: #adb5bd;
+    font-weight: 500;
+    text-align: center;
+    animation: ${fadeIn} 0.5s ease;
+`;
+
+
 export default Step1;

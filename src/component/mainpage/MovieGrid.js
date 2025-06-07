@@ -1,164 +1,173 @@
-import { Link } from 'react-router-dom';
+import React from 'react';
 import styled from 'styled-components';
-import { movies } from '../../example_data/movies';
-import { useContext } from 'react';
-import { UserContext } from '../../context/UserContext';
+import { Link } from 'react-router-dom';
+// import { movies } from '../../example_data/movies'; // 실제 데이터 경로 확인
+// import { UserContext } from '../../context/UserContext'; // 필요 시 사용
 
-const primaryBlue = '#1E6DFF';
-const darkBlue = '#005fa3';
-const white = '#fff';
-const lightGray = '#eee';
-const textGray = '#555';
-const darkGray = '#333';
+// --- 목업 데이터 (실제 프로젝트에서는 제거) ---
+const movies = [
+    {id: 1, title: '기생충', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg', reservation_rate: 17.5, director: '봉준호', actors: '송강호, 이선균, 조여정', genres: ['드라마', '스릴러'], screen_types: ['2D'], release_date: '2019-05-30'},
+    {id: 2, title: '올드보이', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20111222_177%2F1324537084439rmrVk_JPEG%2Fmovie_image.jpg', reservation_rate: 14.6, director: '박찬욱', actors: '최민식, 유지태, 강혜정', genres: ['스릴러', '액션'], screen_types: ['2D', 'IMAX'], release_date: '2003-11-21'},
+    {id: 3, title: '부산행', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20200612_248%2F1591937633750Vvyr6_JPEG%2Fmovie_image.jpg', reservation_rate: 12.1, director: '연상호', actors: '공유, 정유미, 마동석', genres: ['액션', '공포'], screen_types: ['2D', '4DX'], release_date: '2016-07-20'},
+    {id: 4, title: '극한직업', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190116_206%2F1547615429111dINWj_JPEG%2Fmovie_image.jpg', reservation_rate: 18.2, director: '이병헌', actors: '류승룡, 이하늬, 진선규', genres: ['코미디', '액션'], screen_types: ['2D'], release_date: '2019-01-23'},
+    {id: 5, title: '헤어질 결심', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20220607_129%2F16545872892918GA4h_JPEG%2Fmovie_image.jpg', reservation_rate: 9.8, director: '박찬욱', actors: '박해일, 탕웨이', genres: ['로맨스', '드라마'], screen_types: ['2D'], release_date: '2022-06-29'},
+];
+const UserContext = React.createContext({ user: { role: 'user' } });
+// --- 목업 데이터 끝 ---
+
+
+const MovieGrid = ({ type, filters }) => {
+    // const { user } = useContext(UserContext); // 실제 UserContext 사용 시 활성화
+
+    // 필터링 및 정렬 로직
+    const displayedMovies = movies
+        .filter(movie => {
+            const { genres, screenTypes, searchTerm } = filters;
+            const matchesGenre = genres.length === 0 || genres.some(g => movie.genres.includes(g));
+            const matchesScreenType = screenTypes.length === 0 || screenTypes.some(t => movie.screen_types.includes(t));
+            const matchesSearch = searchTerm === '' || movie.title.toLowerCase().includes(searchTerm.toLowerCase());
+            // 'chart' vs 'upcoming' 로직 추가 필요
+            return matchesGenre && matchesScreenType && matchesSearch;
+        })
+        .sort((a, b) => {
+            return filters.sortOrder === 'popularity'
+                ? b.reservation_rate - a.reservation_rate
+                : new Date(b.release_date) - new Date(a.release_date);
+        })
+        .slice(0, 5); // 메인 페이지에서는 5개만 표시
+
+    return (
+        <Grid>
+            {displayedMovies.map((movie) => (
+                <MovieCard key={movie.id}>
+                    <PosterContainer>
+                        <Poster src={movie.poster} alt={movie.title} />
+                        <HoverOverlay>
+                            <ButtonGroup>
+                                <ActionButton as={Link} to={`/movie/${movie.id}`} className="secondary">상세보기</ActionButton>
+                                <ActionButton as={Link} to={`/reservation?movie=${movie.id}`}>예매하기</ActionButton>
+                            </ButtonGroup>
+                        </HoverOverlay>
+                    </PosterContainer>
+                    <Info>
+                        <h3>{movie.title}</h3>
+                        <p>예매율 {movie.reservation_rate}%</p>
+                    </Info>
+                </MovieCard>
+            ))}
+        </Grid>
+    );
+};
+
+// --- STYLED COMPONENTS ---
 
 const Grid = styled.div`
   display: grid;
-  /* width: 80%; 이 속성을 제거하거나 100%로 변경합니다. */
-  /* margin: 0 auto 50px; 이 속성을 제거합니다. */
   gap: 30px;
-  padding: 20px 0;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* 현재는 220px로 유지하되, 필요시 조정 */
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+`;
+
+const ButtonGroup = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 75%; /* 버튼 그룹의 너비 설정 */
+  display: flex;
+  flex-direction: column; /* 버튼을 세로로 나열 */
+  align-items: center; /* 버튼을 가운데 정렬 */
+  gap: 12px; /* 버튼 사이의 간격 */
+  opacity: 0;
+  transform: translate(-50%, -45%); /* 시작 위치 (약간 아래) */
+  transition: all 0.3s ease;
+`;
+
+const HoverOverlay = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* 포스터를 어둡게 만드는 효과 */
+    opacity: 0;
+    transition: opacity 0.3s ease;
 `;
 
 const MovieCard = styled.div`
-  background-color: ${white};
+  background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
 
   &:hover {
     transform: translateY(-8px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    
+    ${HoverOverlay} {
+        opacity: 1;
+    }
+    ${ButtonGroup} {
+        opacity: 1;
+        transform: translate(-50%, -50%); /* 최종 위치 (정중앙) */
+    }
   }
+`;
+
+const PosterContainer = styled.div`
+    position: relative;
+    width: 100%;
+    height: 360px; /* 고정된 높이 */
 `;
 
 const Poster = styled.img`
   width: 100%;
-  height: 350px;
+  height: 100%;
   object-fit: cover;
   display: block;
 `;
 
 const Info = styled.div`
-  padding: 15px;
-  color: ${darkGray};
-
-  h2 {
+  padding: 16px;
+  
+  h3 {
     font-size: 20px;
-    margin-bottom: 8px;
-    font-weight: 600;
+    font-weight: 700;
+    margin: 0 0 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   p {
-    margin: 6px 0;
+    margin: 0;
     font-size: 15px;
-    color: ${textGray};
+    color: #555;
   }
-`;
-
-const StyledLink = styled(Link)`
-  text-decoration: none;
-  color: inherit;
-
-  &:visited {
-    color: inherit;
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
-
 `;
 
 const ActionButton = styled.button`
-  padding: 10px 20px;
-  font-size: 15px;
+  width: 100%; /* 버튼 너비를 부모(ButtonGroup)에 맞춤 */
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 700;
   border: none;
-  border-radius: 6px;
-  background-color: ${primaryBlue};
-  color: ${white};
+  border-radius: 8px;
+  background-color: #1E6DFF; /* 예매하기 버튼 색 (분홍색 계열) */
+  color: #fff;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: all 0.2s ease;
+
+  &.secondary {
+    background-color: #fff; /* 상세보기 버튼 색 (흰색) */
+    color: #333;
+  }
 
   &:hover {
-    background-color: ${darkBlue};
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    background-color: #004f8a;
-    transform: translateY(0);
+    transform: scale(1.05);
   }
 `;
-
-const MovieGrid = ({ type, sortOrder, genres, screenTypes, searchTerm }) => {
-  // Filter movies based on the applied filters
-  const filteredMovies = movies.filter(movie => {
-    const matchesGenre = genres.length === 0 || genres.some(genre => movie.genres.includes(genre));
-    const matchesScreenType = screenTypes.length === 0 || screenTypes.some(type => movie.screen_types.includes(type));
-    const matchesSearchTerm = movie.title.toLowerCase().includes(searchTerm.toLowerCase()); // 검색어 필터링 활성화
-    // Add logic for 'upcoming' and 'chart' based on movie data if available
-    // For now, let's assume all movies are relevant to 'chart' and 'upcoming' is a separate list
-    const matchesTab = type === 'chart' ? true : false; // Placeholder, adjust based on your actual movie data
-
-    return matchesGenre && matchesScreenType && matchesSearchTerm && matchesTab;
-  });
-
-  // Sort movies based on sortOrder
-  const sortedMovies = [...filteredMovies].sort((a, b) => {
-    if (sortOrder === 'popularity') {
-      return b.reservation_rate - a.reservation_rate;
-    } else if (sortOrder === 'release') {
-      // Assuming 'release_date' exists in your movie object and is comparable
-      return new Date(b.release_date) - new Date(a.release_date);
-    }
-    return 0;
-  });
-
-  // Display a limited number of movies for the main page preview
-  const displayedMovies = sortedMovies.slice(0, 5);
-  const { user } = useContext(UserContext);
-
-  return (
-    <Grid>
-      {displayedMovies.map((movie) => (
-        <MovieCard key={movie.id}>
-          <StyledLink to={`/movie/${movie.id}`}>
-            <Poster src={movie.poster} alt={movie.title} />
-            <Info>
-              <h2>{movie.title}</h2>
-              <p>예매율: {movie.reservation_rate}%</p>
-              <p>감독: {movie.director}</p>
-              <p>배우: {movie.actors}</p>
-            </Info>
-          </StyledLink>
-          {user.role === "admin" ? (
-            <ButtonGroup>
-              <StyledLink to={`/CreateMovie`}>
-                <ActionButton>수정하기</ActionButton>
-              </StyledLink>
-              <StyledLink to={`/movieDelete`}>
-                <ActionButton>삭제하기</ActionButton>
-              </StyledLink>
-            </ButtonGroup>
-          ) : (
-            <ButtonGroup>
-              <StyledLink to={`/reservation`}>
-                <ActionButton>예매하기</ActionButton>
-              </StyledLink>
-              <StyledLink to={`/movie/${movie.id}`}>
-                <ActionButton>상세보기</ActionButton>
-              </StyledLink>
-            </ButtonGroup>
-          )}
-        </MovieCard>
-      ))}
-    </Grid>
-  );
-};
 
 export default MovieGrid;

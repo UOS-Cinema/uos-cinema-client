@@ -1,344 +1,294 @@
-import styled from "styled-components";
-import { useState } from "react";
-import age15 from '../../asset/age15.png';
+import React, { useState, useMemo } from "react";
+import styled, { createGlobalStyle } from "styled-components";
 import Navbar from "../../component/common/NavBar";
-import { Link } from "react-router-dom";
 import TimeTable from "../../component/admin/TimeTable";
+import { FaChevronLeft, FaChevronRight, FaPlus } from "react-icons/fa";
 
-// 샘플 데이터
-const sampleTheaters = [
-  {
-    theaterId: 1,
-    name: "C-Language",
-    types: ["2D", "3D"],
-  },
-  {
-    theaterId: 2,
-    name: "C++",
-    types: ["2D", "4D"],
-  },
-  {
-    theaterId: 3,
-    name: "Kotlin",
-    types: ["2D"],
-  },
-  {
-    theaterId: 4,
-    name: "TS",
-    types: ["2D", "3D"],
-  },
-  {
-    theaterId: 5,
-    name: "JS",
-    types: ["2D", "4D"],
-  },
-  {
-    theaterId: 6,
-    name: "Python",
-    types: ["2D"],
-  },
-  {
-    theaterId: 7,
-    name: "JAVA",
-    types: ["2D", "4D"],
-  },
-  {
-    theaterId: 8,
-    name: "React",
-    types: ["2D"],
-  },
+// --- 목업 데이터 ---
+const sampleMovies = [
+    { id: 1, title: "야당", runningTime: 135, ageRating: "15" },
+    { id: 2, title: "승부", runningTime: 120, ageRating: "12" },
+    { id: 3, title: "바이러스", runningTime: 110, ageRating: "All" },
+    { id: 4, title: "플로우즈", runningTime: 95, ageRating: "15" },
+    { id: 5, title: "파과", runningTime: 140, ageRating: "18" },
+    { id: 6, title: "거룩한 밤", runningTime: 125, ageRating: "18" },
 ];
+const sampleTheaters = [
+    { theaterId: 1, name: "C-Language" },
+    { theaterId: 2, name: "C++" },
+    { theaterId: 3, name: "Kotlin" },
+    { theaterId: 4, name: "TS" },
+];
+// --- 목업 데이터 끝 ---
+
 const ScheduleManagePage = () => {
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTheater, setSelectedTheater] = useState(null);
-  const movies = ["야당", "승부", "바이러스", "플로우즈", "파과", "거룩한 밤", "아이언맨", "위플래쉬"];
+    const [selectedMovie, setSelectedMovie] = useState(sampleMovies[0]);
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(new Date()); // 선택된 날짜 상태 추가
+    const [selectedTheater, setSelectedTheater] = useState(sampleTheaters[0]);
 
-  const today = new Date();
-  const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
+    // 한 주씩 날짜를 이동하는 함수
+    const moveDate = (amount) => {
+        setCurrentDate(prev => {
+            const newDate = new Date(prev);
+            newDate.setDate(prev.getDate() + amount);
+            return newDate;
+        });
+    };
 
-  // 현재 날짜부터 7일치 날짜 배열 생성
-  const getDateRange = (startDate) => {
-    const year = startDate.getFullYear();  // startDate의 연도 추출
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i); // 날짜 조정
-      return {
-        year: year,                        // 연도를 포함
-        day: date.getDate().toString(),     // 날짜
-        weekday: daysKor[date.getDay()],    // 요일
-        month: date.getMonth() + 1,         // 월 (0부터 시작하므로 +1)
-      };
-    });
-  };
-  const [dateRange, setDateRange] = useState(getDateRange(today));
-  const handlePrevWeek = () => {
-    const firstDate = dateRange[0];
-    const { year, month, day } = firstDate;
-    const newStartDate = new Date(year, month - 1, day);
-    newStartDate.setDate(newStartDate.getDate() - 1);
-    setDateRange(getDateRange(newStartDate));
-  };
+    // 현재 날짜 기준 7일치 날짜 배열 생성
+    const weekDates = useMemo(() => {
+        const startOfWeek = new Date(currentDate);
+        // Reset time part to compare dates only
+        startOfWeek.setHours(0, 0, 0, 0);
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + i);
+            return date;
+        });
+    }, [currentDate]);
 
-  const handleNextWeek = () => {
-    const firstDate = dateRange[0];
-    const { year, month, day } = firstDate;
-    const newStartDate = new Date(year, month - 1, day);
-    newStartDate.setDate(newStartDate.getDate() + 1);
-    setDateRange(getDateRange(newStartDate));
-  };
+    return (
+        <>
+            <GlobalStyle />
+            <PageWrapper>
+                <Navbar underline={true} />
+                <MainContainer>
+                    <Header>
+                        <Title>상영일정 관리</Title>
+                        <SaveButton><FaPlus /> 새 일정 저장</SaveButton>
+                    </Header>
+                    <ScheduleContainer>
+                        {/* 좌측: 영화 목록 */}
+                        <LeftPanel>
+                            {sampleMovies.map((movie) => (
+                                <MovieItem
+                                    key={movie.id}
+                                    active={selectedMovie?.id === movie.id}
+                                    onClick={() => setSelectedMovie(movie)}
+                                >
+                                    <AgeRating rating={movie.ageRating}>{movie.ageRating}</AgeRating>
+                                    {movie.title}
+                                </MovieItem>
+                            ))}
+                        </LeftPanel>
 
-  return (
-    <div>
-      <Navbar underline={true} />
-      <Strong>상영일정 관리</Strong>
-      <Container>
+                        {/* 중앙: 날짜 및 상영관 선택 */}
+                        <MiddlePanel>
+                            <DateSelector>
+                                <ArrowButton onClick={() => moveDate(-7)}><FaChevronLeft /></ArrowButton>
+                                <MonthLabel>{currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월</MonthLabel>
+                                <ArrowButton onClick={() => moveDate(7)}><FaChevronRight /></ArrowButton>
+                            </DateSelector>
+                            <DateList>
+                                {weekDates.map((date, idx) => (
+                                    <DateItem key={idx} onClick={() => setSelectedDate(date)} weekday={date.getDay()}>
+                                        <div>{['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}</div>
+                                        <Day selected={date.toDateString() === selectedDate.toDateString()}>{date.getDate()}</Day>
+                                    </DateItem>
+                                ))}
+                            </DateList>
+                            <TheaterList>
+                                {sampleTheaters.map((theater) => (
+                                    <TheaterItem
+                                        key={theater.theaterId}
+                                        selected={selectedTheater?.theaterId === theater.theaterId}
+                                        onClick={() => setSelectedTheater(theater)}
+                                    >
+                                        상영관 {theater.theaterId}<span>({theater.name}관)</span>
+                                    </TheaterItem>
+                                ))}
+                            </TheaterList>
+                        </MiddlePanel>
 
-        <MovieSelection>
-
-          {movies.map((movie, idx) => (
-            <MovieItem
-              key={idx}
-              active={selectedMovie === movie}
-              onClick={() => setSelectedMovie(movie)}
-            >
-              <StyledImg src={age15} />{movie}
-            </MovieItem>
-          ))}
-        </MovieSelection>
-        <TimeSelection>
-
-          <MonthLabel>{dateRange[0]?.month}월</MonthLabel>
-
-          <DateList>
-            <ArrowButton onClick={handlePrevWeek}>{"<"}</ArrowButton>
-            {dateRange.map((dateObj, idx) => {
-              // today 객체 생성 (년, 월, 일만 비교)
-              const todayDate = new Date();
-              todayDate.setHours(0, 0, 0, 0);  // 시간을 00:00:00으로 설정하여 날짜만 비교
-
-              // dateObj를 새로운 Date 객체로 변환
-              const dateToCompare = new Date(dateObj.year, dateObj.month - 1, dateObj.day);
-              dateToCompare.setHours(0, 0, 0, 0);  // dateObj도 시간을 00:00:00으로 설정
-
-              const isToday = dateToCompare.getTime() === todayDate.getTime();
-
-              return (
-                <DateItem
-                  key={idx}
-                  active={selectedDate === dateObj.day}
-                  weekday={dateObj.weekday}
-                  onClick={() => setSelectedDate(dateObj.day)}
-                >
-                  <div>{dateObj.day}</div>
-                  <div>{dateObj.weekday}</div>
-                  {isToday && <TodayLabel>오늘</TodayLabel>}
-                </DateItem>
-              );
-            })}
-            <ArrowButton onClick={handleNextWeek}>{">"}</ArrowButton>
-          </DateList>
-
-          <TheaterUL>
-            {sampleTheaters.map((theater) => (
-              <TheaterLI key={theater.theaterId}
-                onClick={() => setSelectedTheater(theater.theaterId)}
-                isSelected={selectedTheater === theater.theaterId}>
-                <div>
-                  <Info>상영관{theater.theaterId} ({theater.name} 상영관)</Info>
-                </div>
-              </TheaterLI>
-            ))}
-          </TheaterUL>
-        </TimeSelection>
-        <TimeTable></TimeTable>
-        {/* <SaveButtonWrapper>
-          <SaveButton >저장하기</SaveButton>
-        </SaveButtonWrapper> */}
-      </Container>
-    </div>
-  );
+                        {/* 우측: 타임테이블 */}
+                        <RightPanel>
+                            <TimeTable selectedMovie={selectedMovie} />
+                        </RightPanel>
+                    </ScheduleContainer>
+                </MainContainer>
+            </PageWrapper>
+        </>
+    );
 };
 
+export default ScheduleManagePage;
 
-const SaveButtonWrapper = styled.div`
+// --- STYLED COMPONENTS ---
+const primaryBlue = '#1E6DFF';
+const red = '#e03131';
+const darkGray = '#343a40';
+const mediumGray = '#dee2e6';
+const lightGray = '#f8f9fa';
+
+const GlobalStyle = createGlobalStyle`body, html { background-color: ${lightGray}; }`;
+
+const PageWrapper = styled.div` min-height: 100vh; `;
+
+const MainContainer = styled.div`
+  width: 90%;
+  max-width: 1800px;
+  margin: 40px auto;
+`;
+
+const Header = styled.div`
   display: flex;
-  justify-content: flex-end;
-  margin:0 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+`;
+
+const Title = styled.h2`
+  font-size: 28px;
+  font-weight: 900;
+  color: ${darkGray};
 `;
 
 const SaveButton = styled.button`
-  background-color: #1E90FF;
-  color: white;
-  font-size: 16px;
-  padding:0 10px;
-  height:40px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  &:hover {
-    background-color: #1C6DD0;
-  }
-`;
-const TheaterUL = styled.ul`
-  list-style: none;
-  padding: 0;
-  gap: 20px;
-  margin: 0 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: ${primaryBlue};
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
 `;
 
-const TheaterLI = styled.li`
-  border: 1px solid #ccc;
+const ScheduleContainer = styled.div`
+  display: grid;
+  grid-template-columns: 250px 1fr 350px;
+  gap: 24px;
+  height: 80vh;
+`;
+
+const Panel = styled.div`
+  background-color: #fff;
   border-radius: 12px;
-  padding: 20px;
-  margin:15px 20px;
-    display: flex;
-  justify-content: space-between; /* 내용과 버튼을 양쪽 끝에 배치 */
-  align-items: center; /* 세로로 중앙 정렬 */
-  background-color: ${({ isSelected }) => (isSelected ? '#1D79F2' : 'white')};
-  &:hover {
-    background-color: #0B2D59;
-  }
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  padding: 16px;
+  overflow-y: auto;
 `;
 
-const Info = styled.div`
-  margin-bottom: 8px;
-  font-size: 16px;
-`;
+const LeftPanel = styled(Panel)``;
+const MiddlePanel = styled(Panel)``;
+const RightPanel = styled(Panel)``;
 
-
-
-const StyledImg = styled.img`
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  margin: 5px 10px;
-`;
-const Strong = styled.div`
-  font-size:25px;
-  font-weight:bold;
-  margin:20px 50px;
-`;
-const Container = styled.div`
-  display:flex;
-  flex-direction:row;
-  width: 100%;
-  margin:0 50px;
-`;
-
-const TimeSelection = styled.div`
-  display:flex;
-  align-items:start;
-  border:1px solid gray;
-  flex-direction:column;
-   &:first-of-type {
-    border-right: 10px solid black;
-  }
-`;
-
-
-
-const MovieSelection = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-width:200px;
-
-  border:1px solid gray;
-  align-items: start;
+const AgeRating = styled.span`
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    background-color: ${({ rating }) =>
+        rating === "All" ? '#57a773' :
+        rating === "12" ? '#4aa7c6' :
+        rating === "15" ? '#e6b345' : '#d94b4b'};
 `;
 
 const MovieItem = styled.div`
   display: flex;
-  justify-content: start;
   align-items: center;
-  background: ${({ active }) => (active ? "#1E6DFF" : "#fff")};
-  color: ${({ active }) => (active ? "white" : "black")};
-  border-bottom: 1px solid #ccc;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: ${({ active }) => (active ? primaryBlue : darkGray)};
+  background-color: ${({ active }) => (active ? '#eff6ff' : 'transparent')};
   cursor: pointer;
-  text-align: center;
-  font-size: 15px;
-  font-weight: ${({ active }) => (active ? "bold" : "normal")};
-  transition: background 0.3s, color 0.3s, font-weight 0.3s;
-  width: 100%;
-  &:first-of-type {
-    border-top: 1px solid #ccc;
-  }
+  transition: all 0.2s ease;
+
   &:hover {
-    background: ${({ active }) => (active ? "#1E6DFF" : "#f0f0f0")};
+    background-color: ${lightGray};
   }
 `;
 
-const TodayLabel = styled.div`
-  font-size: 10px;
-  color: #888;
-  position: absolute;   /* 부모 요소를 기준으로 위치 조정 */
+const DateSelector = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px 16px;
+`;
 
+const MonthLabel = styled.span`
+  font-size: 20px;
+  font-weight: 700;
+`;
+
+const ArrowButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: ${darkGray};
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  line-height: 1;
+  &:hover { background-color: ${lightGray}; }
 `;
 
 const DateList = styled.div`
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-around;
+  padding-bottom: 20px;
+  border-bottom: 1px solid ${mediumGray};
   margin-bottom: 20px;
-  overflow-x: auto;
-  padding: 10px 0;
-  position: relative;
-  height:100px;
-`;
-
-const ArrowButton = styled.div`
-  font-size: 30px;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 50%;
-  display: flex;
-  text-align:center;
-  align-items: center;
-  justify-content: center;
-  width:30px;
-  height:30px;
-  &:hover {
-    background-color: #ddd;
-  }
-`;
-
-const MonthLabel = styled.div`
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  display:flex;
-  margin-left:20px;
-  jusify-content:center;
 `;
 
 const DateItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 70px;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.3s;
-
-  > div:first-child {
-    font-size: 15px;
-    background: ${({ active }) => (active ? "black" : "transparent")};
-    color: ${({ active, weekday }) => {
-    if (active) return "white";
-    if (weekday === "토") return "blue";
-    if (weekday === "일") return "red";
-    return "black";
-  }};
-    font-weight: ${({ active }) => (active ? "bold" : "normal")};
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    text-align: center;
-    padding-top: 10px;
+  
+  div:first-child {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: ${({ weekday }) => {
+        if (weekday === 0) return red; // Sunday
+        if (weekday === 6) return primaryBlue; // Saturday
+        return '#868e96'; // Other days
+      }};
   }
 `;
 
+const Day = styled.div`
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: ${({ selected }) => (selected ? '#fff' : darkGray)};
+    background-color: ${({ selected }) => (selected ? primaryBlue : 'transparent')};
+`;
 
+const TheaterList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+`;
 
-export default ScheduleManagePage;
+const TheaterItem = styled.div`
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid ${({ selected }) => (selected ? primaryBlue : mediumGray)};
+    background-color: ${({ selected }) => (selected ? '#eff6ff' : 'transparent')};
+    color: ${({ selected }) => (selected ? primaryBlue : darkGray)};
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    span {
+        font-weight: 500;
+        color: #868e96;
+    }
+`;
