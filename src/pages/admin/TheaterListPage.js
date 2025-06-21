@@ -34,7 +34,7 @@ const TheaterListPage = () => {
                                 <TheaterName>상영관{theater.theaterId} ({theater.name}관)</TheaterName>
                                 <TypeInfo>제공 유형: {theater.types.join(", ")}</TypeInfo>
                             </div>
-                            <DetailLink to={`/theaterDetail`}>상세보기</DetailLink>
+                            <DetailLink to={`/theaterDetail/${theater.theaterId}`}>상세보기</DetailLink>
                             {/* <DetailLink to={`/theaterDetail/${theater.theaterId}`}>상세보기</DetailLink> */}
                         </TheaterCard>
                     ))}

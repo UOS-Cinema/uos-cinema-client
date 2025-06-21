@@ -3,19 +3,8 @@ import styled, { createGlobalStyle } from "styled-components";
 import Navbar from "../component/common/NavBar"; // 경로 확인 필요
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-// import { UserContext } from "../context/UserContext"; // 실제 프로젝트에서는 이 부분을 활성화하세요.
 
-// --- 목업 데이터 (실제 프로젝트에서는 제거) ---
 
-const MockUserProvider = ({ children }) => {
-    const [user, setUser] = useState({ role: null }); 
-    return (
-        <UserContext.Provider value={{ user, setUser }}>
-            {children}
-        </UserContext.Provider>
-    );
-};
-// --- 목업 데이터 끝 ---
 
 const LoginPage = () => {
     const [activeMainTab, setActiveMainTab] = useState("member");
@@ -23,34 +12,77 @@ const LoginPage = () => {
     const [id, setId] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
-
-    const handleLogin = (e) => {
+   
+    // handleLogin 함수를 async/await를 사용하도록 변경
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // 실제 애플리케이션에서는 서버와 통신하여 로그인 처리
-        if (id === "admin" && password === "admin") {
-            setUser({ id: "admin", role: "admin" });
-            alert("관리자로 로그인되었습니다.");
-            navigate("/");
-        } else if (id && password) { // 아이디와 비밀번호가 입력되었을 경우
+
+        if (!id || !password) {
+            alert("아이디와 비밀번호를 입력해주세요.");
+            return;
+        }
+
+        // 관리자 탭에서 로그인 시도
+        if (activeMainTab === "admin") {
+            try {
+                // 참고: 요청하신 'amins'는 'admins'의 오타일 가능성이 높아 'admins'로 수정했습니다.
+                console.log(id);
+                console.log(password);
+                const response = await fetch('/admins/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: id,
+                        password: password,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // 서버가 에러 메시지를 보내는 경우, 해당 메시지를 띄움
+                    throw new Error(data.message || '로그인에 실패했습니다.');
+                }
+                console.log(data.data.accessToken);
+                // accessToken을 정상적으로 받아온 경우
+                const  accessToken  = data.data.accessToken;
+                console.log(accessToken);
+                // 받아온 accessToken을 localStorage에 저장 (웹 세션 유지용)
+                localStorage.setItem('accessToken', accessToken);
+
+                setUser({ id: id, role: "admin", accessToken:accessToken });
+                alert("관리자로 로그인되었습니다.");
+                navigate("/"); // 관리자 페이지 또는 메인 페이지로 이동
+
+            } catch (error) {
+                console.error("Admin login error:", error);
+                alert(error.message || "로그인 중 오류가 발생했습니다.");
+            }
+
+        // 회원 탭에서 로그인 시도 (기존 로직 유지)
+        } else if (activeMainTab === "member") {
+            // 여기는 실제 회원 로그인 API 연동 로직으로 대체될 수 있습니다.
             setUser({ id: id, role: "member" });
             alert("로그인 성공!");
             navigate("/");
-        } else {
-            alert("아이디와 비밀번호를 입력해주세요.");
         }
     };
     
     return (
         <>
             <GlobalStyle />
-            {/* 실제 앱에서는 목업 프로바이더를 제거해야 합니다. */}
-            <MockUserProvider> 
+
                 <Container>
                     <Navbar underline={true} />
                     <LoginContainer>
                         <TabMenu>
                             <Tab active={activeMainTab === "member"} onClick={() => setActiveMainTab("member")}>
                                 회원
+                            </Tab>
+                            <Tab active={activeMainTab === "admin"} onClick={() => setActiveMainTab("admin")}>
+                                관리자
                             </Tab>
                             <Tab active={activeMainTab === "guest"} onClick={() => setActiveMainTab("guest")}>
                                 비회원
@@ -59,24 +91,21 @@ const LoginPage = () => {
                         <Form onSubmit={handleLogin}>
                             {activeMainTab === "member" && (
                                 <>
-                                    <Input
-                                        type="text"
-                                        placeholder="아이디"
-                                        value={id}
-                                        onChange={(e) => setId(e.target.value)}
-                                    />
-                                    <Input
-                                        type="password"
-                                        placeholder="비밀번호"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
+                                    <Input type="text" placeholder="아이디" value={id} onChange={(e) => setId(e.target.value)} />
+                                    <Input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
                                     <LoginButton type="submit">로그인</LoginButton>
                                     <LinkButtonWrapper>
                                         <StyledLink to="/signup">회원가입</StyledLink>
                                         <span>|</span>
                                         <StyledLink to="/find-credentials">아이디/비밀번호 찾기</StyledLink>
                                     </LinkButtonWrapper>
+                                </>
+                            )}
+                            {activeMainTab === "admin" && (
+                                <>
+                                    <Input type="text" placeholder="아이디" value={id} onChange={(e) => setId(e.target.value)} />
+                                    <Input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                    <LoginButton type="submit">로그인</LoginButton>
                                 </>
                             )}
                             {activeMainTab === "guest" && (
@@ -105,14 +134,15 @@ const LoginPage = () => {
                         </Form>
                     </LoginContainer>
                 </Container>
-            </MockUserProvider>
+
         </>
     );
 };
 
 export default LoginPage;
 
-// --- STYLED COMPONENTS ---
+// --- STYLED COMPONENTS (이하 동일) ---
+// (스타일 코드는 변경사항이 없으므로 생략합니다)
 
 const primaryBlue = '#1E6DFF';
 const darkBlue = '#0056b3';

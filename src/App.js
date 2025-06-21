@@ -22,6 +22,9 @@ import CreateActorPage from "./pages/admin/CreateDirectorPage";
 import CreateMoviePage from "./pages/admin/CreateMoviePage";
 import DirectorDetailPage from "./pages/DirectorDetailPage";
 import ActorDetailPage from "./pages/ActorDetailPage";
+import AdminManagePage from "./pages/admin/AdminManagePage";
+import MovieManagePage from "./pages/admin/MovieManagePage";
+import EditMoviePage from "./pages/admin/EditMovePAge";
 function App() {
   return (
     <UserProvider>
@@ -37,18 +40,20 @@ function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/home" element={<HomePage/>}/>
           <Route path="/schedule" element={<SchedulePage/>}/>
-          <Route path="/director" element={<DirectorDetailPage/>}/>
+          <Route path="/director/:id" element={<DirectorDetailPage/>}/>
           <Route path="/actor" element={<ActorDetailPage/>}/>
 
+          <Route path="/movieManage" element={<MovieManagePage/>}/>
           <Route path="/theaterList" element={<TheaterListPage/>}/>
-          <Route path="/theaterDetail" element={<TheaterDetailPage/>}/>
-          <Route path="/theaterEdit" element={<TheaterEditPage/>}/>
+          <Route path="/theaterDetail/:id" element={<TheaterDetailPage/>}/>
+          <Route path="/theaterEdit/:id" element={<TheaterEditPage/>}/>
           <Route path="/scheduleManage" element={<ScheduleManagePage/>}/>
           <Route path="/paymentPolicy" element={<PaymentPolicyPage/>}/>
           <Route path="/createDirector" element={<CreateDirectorPage/>}/>
           <Route path="/createActor" element={<CreateActorPage/>}/>
           <Route path="/createMovie" element={<CreateMoviePage/>}/>
-        
+          <Route path="/adminManage" element={<AdminManagePage/>}/>
+          <Route path="/editMovie" element={<EditMoviePage/>}/>
         </Routes>
       </Router>
     </UserProvider>

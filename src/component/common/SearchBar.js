@@ -18,6 +18,7 @@ const Select = styled.select`
   border: none;
   outline: none;
   font-size: 16px;
+  background-color:inherit;
 `;
 
 const Input = styled.input`
@@ -26,11 +27,12 @@ const Input = styled.input`
   border: none;
   outline: none;
   font-size: 16px;
+  background-color:inherit
 `;
 
 const Button = styled.button`
   padding: 8px 16px;
-  background-color: white;
+  background-color: inherit;
   color: gray;
   border: none;
   border-radius: 4px;

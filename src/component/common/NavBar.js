@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import styled from 'styled-components';
 import logo from '../../asset/logo.svg';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext';
 import { FaSearch } from "react-icons/fa";
 
@@ -10,7 +10,25 @@ const lightGray = '#eee';
 const mediumGray = '#ccc';
 const darkGray = '#333';
 const textGray = '#555';
+const LogoutButton = styled.button`
+    /* 1. StyledLink와 똑같이 보이도록 스타일을 복사해옵니다. */
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    
+    &:hover {
+        color: #1E6DFF; /* primaryBlue */
+    }
 
+    /* 2. <button>의 기본 스타일을 모두 초기화합니다. */
+    background: none;
+    border: none;
+    font: inherit; /* 부모의 폰트를 그대로 사용 */
+    cursor: pointer;
+    text-align: inherit; /* 부모의 정렬을 그대로 사용 */
+`;
 const NavbarContainer = styled.nav`
   padding: 15px 10%;
   display: flex;
@@ -145,7 +163,20 @@ const SearchContainer = styled.div`
 `;
 
 const Navbar = ({ underline }) => {
-  const { user } = useContext(UserContext);
+  const { user,setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+  const handleLogout = () => {
+        // 1. UserContext의 상태를 초기화합니다.
+        setUser({ id: null, role: null });
+
+        // 2. 로컬 스토리지에 저장된 사용자 정보와 토큰을 삭제합니다.
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken'); // accessToken도 함께 삭제
+
+        // 3. 로그아웃 후 홈으로 이동합니다.
+        alert('로그아웃되었습니다.');
+        navigate('/'); 
+    };
   return (
     <NavbarContainer underline={underline}>
       <Link to="/">
@@ -172,6 +203,7 @@ const Navbar = ({ underline }) => {
               </li>
             </DropdownMenu>
           </MenuItem>
+
           <MenuItem>
             <StyledLink>예매</StyledLink>
             <DropdownMenu>
@@ -184,8 +216,14 @@ const Navbar = ({ underline }) => {
             </DropdownMenu>
           </MenuItem>
           <MenuItem>
-            <StyledLink>영화관 관리</StyledLink>
+            <StyledLink>관리자 도구</StyledLink>
             <DropdownMenu>
+              <li>
+                <StyledLink to="/adminManage">어드민 관리</StyledLink>
+              </li>
+              <li>
+                <StyledLink to="/movieManage">영화/배우/감독 관리</StyledLink>
+              </li>
               <li>
                 <StyledLink to="/theaterList">상영관 관리</StyledLink>
               </li>
@@ -199,6 +237,10 @@ const Navbar = ({ underline }) => {
           </MenuItem>
           <MenuItem>
             <StyledLink to="/mypage">마이페이지</StyledLink>
+          </MenuItem>
+          <MenuItem>
+            <LogoutButton as="button" onClick={handleLogout}>로그아웃</LogoutButton>
+
           </MenuItem>
         </Menu>
       }
@@ -229,9 +271,24 @@ const Navbar = ({ underline }) => {
               </li>
             </DropdownMenu>
           </MenuItem>
-          <MenuItem>
-            <StyledLink to="/login">로그인</StyledLink>
-          </MenuItem>
+          {user && user.id ? (
+            // 1. 로그인된 경우: 로그아웃과 마이페이지 버튼 표시
+            <>
+              <MenuItem>
+                {/* a태그나 Link가 아닌 button으로 동작하도록 as="button"을 사용 */}
+                <LogoutButton as="button" onClick={handleLogout}>로그아웃</LogoutButton>
+              </MenuItem>
+              <MenuItem>
+                <StyledLink to="/mypage">마이페이지</StyledLink>
+              </MenuItem>
+            </>
+          ) : (
+            // 2. 로그아웃된 경우: 로그인 버튼 표시
+            <MenuItem>
+              <StyledLink to="/login">로그인</StyledLink>
+            </MenuItem>
+          )}
+
           <MenuItem>
             <StyledLink to="/mypage">마이페이지</StyledLink>
           </MenuItem>

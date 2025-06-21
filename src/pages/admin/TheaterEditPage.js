@@ -1,50 +1,124 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Navbar from "../../component/common/NavBar";
 import styled from "styled-components";
+import { useParams, useNavigate } from "react-router-dom";
 import { FaSave } from "react-icons/fa";
-
-// --- 목업 데이터 ---
-const initialSeatStandard = [
-    [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-];
-// --- 목업 데이터 끝 ---
+import { UserContext } from "../../context/UserContext";
 
 const TheaterEditPage = () => {
-    const [rows, setRows] = useState(10);
-    const [cols, setCols] = useState(20);
-    const [seatStandard, setSeatStandard] = useState(initialSeatStandard);
-    const [mode, setMode] = useState("normal");
-    const [name, setName] = useState("C-Language");
-    const [selectedTypes, setSelectedTypes] = useState(["2D", "3D"]);
-    const types = ["2D", "3D", "4D", "IMAX"];
+    const { id } = useParams(); // URL에서 상영관 ID 가져오기
+    const navigate = useNavigate();
+    const {user}= useContext(UserContext);
+    // 상영관 정보 상태
+    const [name, setName] = useState("");
+    const [selectedTypes, setSelectedTypes] = useState([]);
+    const [layout, setLayout] = useState([]);
+    
+    // UI 제어 상태
+    const [rows, setRows] = useState(0);
+    const [cols, setCols] = useState(0);
+    const [mode, setMode] = useState("SEAT"); // 편집 모드: SEAT, AISLE, NONE
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
+    const allScreenTypes = ["2D", "3D", "4D"];
+
+    // 최초 로드 시 상영관 데이터 불러오기
+    useEffect(() => {
+        const fetchTheaterData = async () => {
+            if (!id) {
+                setError("잘못된 접근입니다. 상영관 ID가 없습니다.");
+                setLoading(false);
+                return;
+            }
+            try {
+                const accessToken = user.accessToken;
+                const response = await fetch(`/theaters/${id}`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+
+                if (!response.ok) throw new Error("상영관 정보를 불러오는 데 실패했습니다.");
+
+                const responseData = await response.json();
+                const theater = responseData.data;
+
+                // API 응답으로 상태 초기화
+                setName(theater.name);
+                setSelectedTypes(theater.screenTypes);
+                setLayout(theater.layout);
+                setRows(theater.layout.length);
+                setCols(theater.layout[0]?.length || 0);
+
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTheaterData();
+    }, [id]);
+
+    // 제공 유형 선택/해제
     const toggleType = (type) => {
         setSelectedTypes(prev =>
             prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
         );
     };
 
+    // 좌석 규격 변경 적용
     const handleResize = () => {
-        const newSeatStandard = Array.from({ length: rows }, () =>
-            Array.from({ length: cols }, () => 1)
+        const newLayout = Array.from({ length: rows }, () =>
+            Array.from({ length: cols }, () => "SEAT") // 기본값은 "SEAT"
         );
-        setSeatStandard(newSeatStandard);
+        setLayout(newLayout);
     };
 
+    // 좌석 클릭 시 현재 모드로 좌석 상태 변경 (페인트 브러시처럼)
     const handleSeatClick = (y, x) => {
-        const newSeatStandard = seatStandard.map(row => [...row]);
-        const currentSeat = newSeatStandard[y][x];
-
-        if (mode === "normal") newSeatStandard[y][x] = currentSeat === 1 ? 1 : 1;
-        else if (mode === "aisle") newSeatStandard[y][x] = currentSeat === 0 ? 1 : 0;
-        else if (mode === "disabled") newSeatStandard[y][x] = currentSeat === 2 ? 1 : 2;
-
-        setSeatStandard(newSeatStandard);
+        const newLayout = layout.map(row => [...row]);
+        newLayout[y][x] = mode;
+        setLayout(newLayout);
     };
+
+    // 변경사항 저장 핸들러
+    const handleSave = async () => {
+        const accessToken = user.accessToken;
+        if (!name.trim()) {
+            alert("상영관 이름을 입력해주세요.");
+            return;
+        }
+
+        const payload = {
+            name: name,
+            layout: layout,
+            screenTypes: selectedTypes,
+        };
+        console.log(payload.layout);
+        try {
+            const response = await fetch(`/theaters/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '저장에 실패했습니다.');
+            }
+            
+            alert('성공적으로 저장되었습니다.');
+            navigate(`/theaters/${id}`); // 저장 후 상세 페이지로 이동
+
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+    
+    if (loading) return <StatusText>로딩 중...</StatusText>;
+    if (error) return <StatusText error>{error}</StatusText>;
 
     return (
         <PageWrapper>
@@ -52,7 +126,6 @@ const TheaterEditPage = () => {
             <Container>
                 <Title>상영관 수정</Title>
                 <EditContainer>
-                    {/* 정보 수정 섹션 */}
                     <InfoEditSection>
                         <Section>
                             <Label>상영관 이름</Label>
@@ -61,7 +134,7 @@ const TheaterEditPage = () => {
                         <Section>
                             <Label>제공 유형</Label>
                             <ButtonGroup>
-                                {types.map((type) => (
+                                {allScreenTypes.map((type) => (
                                     <TypeButton key={type} selected={selectedTypes.includes(type)} onClick={() => toggleType(type)}>
                                         {type}
                                     </TypeButton>
@@ -69,36 +142,35 @@ const TheaterEditPage = () => {
                             </ButtonGroup>
                         </Section>
                         <Section>
-                            <Label>좌석 규격 (가로 x 세로)</Label>
+                            <Label>좌석 규격 (세로(열) x 가로(행))</Label>
                             <ResizeContainer>
-                                <SeatStandardInput type="number" value={cols} onChange={(e) => setCols(Number(e.target.value))} min={1} />
+                                <SeatStandardInput type="number" value={rows} onChange={(e) => setRows(Math.max(1, Number(e.target.value)))} />
                                 <span>x</span>
-                                <SeatStandardInput type="number" value={rows} onChange={(e) => setRows(Number(e.target.value))} min={1} />
-                                <ApplyButton onClick={handleResize}>적용</ApplyButton>
+                                <SeatStandardInput type="number" value={cols} onChange={(e) => setCols(Math.max(1, Number(e.target.value)))} />
+                                <ApplyButton onClick={handleResize}>크기 변경 적용</ApplyButton>
                             </ResizeContainer>
                         </Section>
                     </InfoEditSection>
 
-                    {/* 좌석 배치 수정 섹션 */}
                     <SeatEditSection>
                         <ModeSelector>
-                            <Label>좌석 편집 모드</Label>
+                            <Label>좌석 편집 모드 (선택 후 좌석 클릭)</Label>
                             <ButtonGroup>
-                                <ModeButton selected={mode === "normal"} onClick={() => setMode("normal")}><SeatBoxPreview seatType={1} />정상</ModeButton>
-                                <ModeButton selected={mode === "aisle"} onClick={() => setMode("aisle")}><SeatBoxPreview seatType={0} />통로</ModeButton>
-                                <ModeButton selected={mode === "disabled"} onClick={() => setMode("disabled")}><SeatBoxPreview seatType={2} />사용불가</ModeButton>
+                                <ModeButton selected={mode === "SEAT"} onClick={() => setMode("SEAT")}><SeatBoxPreview seatType="SEAT" />좌석</ModeButton>
+                                <ModeButton selected={mode === "AISLE"} onClick={() => setMode("AISLE")}><SeatBoxPreview seatType="AISLE" />통로</ModeButton>
+                                <ModeButton selected={mode === "UNAVAILABLE"} onClick={() => setMode("UNAVAILABLE")}><SeatBoxPreview seatType="NONE" />사용불가</ModeButton>
                             </ButtonGroup>
                         </ModeSelector>
                         <Screen>SCREEN</Screen>
                         <SeatContainer>
-                            {seatStandard.map((row, y) => {
+                            {layout.map((row, y) => {
                                 let seatNumber = 1;
                                 return (
                                     <SeatRow key={y}>
                                         <RowLabel>{String.fromCharCode(65 + y)}</RowLabel>
-                                        {row.map((seat, x) => (
-                                            <SeatBox key={x} seatType={seat} onClick={() => handleSeatClick(y, x)}>
-                                                {seat === 1 || seat === 2 ? <SeatNumber seatType={seat}>{seatNumber++}</SeatNumber> : null}
+                                        {row.map((seatType, x) => (
+                                            <SeatBox key={x} seatType={seatType} onClick={() => handleSeatClick(y, x)}>
+                                                {seatType === "SEAT" && <SeatNumber>{seatNumber++}</SeatNumber>}
                                             </SeatBox>
                                         ))}
                                     </SeatRow>
@@ -107,7 +179,7 @@ const TheaterEditPage = () => {
                         </SeatContainer>
                     </SeatEditSection>
                 </EditContainer>
-                <SaveButton><FaSave /> 변경사항 저장</SaveButton>
+                <SaveButton onClick={handleSave}><FaSave /> 변경사항 저장</SaveButton>
             </Container>
         </PageWrapper>
     );
@@ -122,13 +194,19 @@ const darkGray = '#343a40';
 const mediumGray = '#dee2e6';
 const lightGray = '#f8f9fa';
 const screenGray = '#495057';
-const yellow = '#fcc419';
 const red = '#e03131';
 
 const PageWrapper = styled.div`
   background-color: ${lightGray};
   min-height: 100vh;
   padding-bottom: 50px;
+`;
+
+const StatusText = styled.p`
+    text-align: center;
+    padding-top: 100px;
+    font-size: 20px;
+    color: ${props => props.error ? red : darkGray};
 `;
 
 const Container = styled.div`
@@ -180,6 +258,7 @@ const Input = styled.input`
 
 const ButtonGroup = styled.div`
   display: flex;
+  flex-wrap: wrap; /* 버튼이 많아질 경우 줄바꿈 */
   gap: 10px;
 `;
 
@@ -253,10 +332,12 @@ const SeatBoxPreview = styled.span`
   height: 18px;
   border-radius: 4px 4px 1px 1px;
   background-color: ${({ seatType }) =>
-      seatType === 1 ? mediumGray : seatType === 0 ? "transparent" : red
+      seatType === "SEAT" ? mediumGray 
+    : seatType === "NONE" ? red 
+    : "transparent"
   };
-   border: ${({seatType}) => seatType === 0 ? `2px dashed ${mediumGray}` : 'none' };
-   box-sizing: border-box;
+  border: ${({seatType}) => seatType === "AISLE" ? `2px dashed ${mediumGray}` : 'none' };
+  box-sizing: border-box;
 `;
 
 const Screen = styled.div`
@@ -278,6 +359,9 @@ const SeatContainer = styled.div`
   flex-direction: column;
   gap: 6px;
   margin-bottom: 40px;
+  padding: 20px;
+  background-color: ${lightGray};
+  border-radius: 8px;
 `;
 
 const SeatRow = styled.div`
@@ -300,12 +384,14 @@ const SeatBox = styled.div`
   height: 26px;
   border-radius: 6px 6px 2px 2px;
   background-color: ${({ seatType }) =>
-      seatType === 1 ? mediumGray : seatType === 2 ? red : "transparent"
+      seatType === "SEAT" ? mediumGray 
+    : seatType === "UNAVAILABLE" ? red 
+    : "transparent"
   };
-  border: ${({seatType}) => seatType === 0 ? `2px dashed ${mediumGray}` : 'none' };
-  box-sizing: border-box; /* 테두리를 크기에 포함시켜 열 정렬 문제 해결 */
+  border: ${({seatType}) => seatType === "AISLE" ? `2px dashed ${mediumGray}` : 'none' };
+  box-sizing: border-box;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.1s;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -318,7 +404,7 @@ const SeatBox = styled.div`
 const SeatNumber = styled.span`
   font-size: 12px;
   font-weight: 500;
-  color: ${({seatType}) => (seatType === 1 ? darkGray : '#fff')};
+  color: ${darkGray};
 `;
 
 const SaveButton = styled.button`
@@ -326,11 +412,10 @@ const SaveButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 10px;
-  align-self: center; /* 버튼 중앙 정렬 */
   width: 100%;
   max-width: 400px;
   padding: 16px 20px;
-  margin-top: 20px;
+  margin: 20px auto 0; /* 중앙 정렬 */
   background-color: ${primaryBlue};
   color: white;
   border: none;

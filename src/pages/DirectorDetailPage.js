@@ -1,27 +1,11 @@
-import React, { useContext, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useContext, useState, useEffect } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
 import styled, { createGlobalStyle, keyframes } from "styled-components";
 import Navbar from "../component/common/NavBar";
 import { UserContext } from "../context/UserContext";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 
 // --- 목업 데이터 ---
-const director = {
-    name: "봉준호",
-    profileImage: "https://search.pstatic.net/common?type=b&size=3000&quality=100&direct=true&src=http%3A%2F%2Fsstatic.naver.net%2Fpeople%2F189%2F201710111116464471.jpg",
-    filmography: [
-        { id: 1, title: "기생충", year: 2019, role: "기택", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-        { id: 2, title: "변호인", year: 2013, role: "송우석", poster: 
-          "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190116_206%2F1547615429111dINWj_JPEG%2Fmovie_image.jpg" },
-        { id: 3, title: "택시운전사", year: 2017, role: "김만섭", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-        { id: 4, title: "살인의 추억", year: 2003, role: "박두만", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-        { id: 5, title: "괴물", year: 2006, role: "박강두", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-        { id: 6, title: "설국열차", year: 2013, role: "남궁민수", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-        { id: 7, title: "사도", year: 2015, role: "영조", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-        { id: 8, title: "마약왕", year: 2018, role: "이두삼", poster: "https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg" },
-    ]
-};
-
 const MockUserProvider = ({ children }) => {
     const [user, setUser] = useState({ role: 'admin' });
     return (
@@ -34,8 +18,68 @@ const MockUserProvider = ({ children }) => {
 
 
 const DirectorDetailPage = () => {
-    const { user } = useContext(UserContext);
-    // const { directorId } = useParams(); // 실제 구현 시 감독 ID를 URL 파라미터로 받음
+    const { user } = useContext(UserContext) || { user: { role: null } };
+    const { id } = useParams();
+    const location = useLocation();
+    const { name, photoUrl } = location.state || { name: '정보 없음', photoUrl: '' };
+
+    const [filmography, setFilmography] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // 컴포넌트가 마운트되거나 id가 변경될 때 필모그래피 API를 호출합니다.
+    useEffect(() => {
+        const fetchFilmography = async () => {
+            if (!id) return;
+
+            setLoading(true);
+            setError(null);
+            try {
+                // 1단계: 감독의 필모그래피에 포함된 영화 ID 목록을 가져옵니다.
+                console.log(id);
+                const idListResponse = await fetch(`/directors/${id}/movies`);
+                if (!idListResponse.ok) {
+                    throw new Error('영화 목록을 불러오는 데 실패했습니다.');
+                }
+                const idListData = await idListResponse.json();
+                const movieIds = idListData.data?.movieIds;
+                console.log(movieIds);
+                if (!movieIds || movieIds.length === 0) {
+                    setFilmography([]); // 영화가 없으면 빈 배열로 설정하고 종료
+                    return;
+                }
+
+                // 2단계: 각 영화 ID에 대해 상세 정보를 병렬로 요청합니다.
+                const movieDetailPromises = movieIds.map(movieId =>
+                    fetch(`/movies/${movieId}/simple`).then(res => {
+                        if (res.ok) {
+                            return res.json();
+                        }
+                        // 개별 요청 실패 시 에러를 로그에 남기고 null을 반환하여 전체가 중단되지 않게 함
+                        console.error(`영화 정보 로딩 실패 (ID: ${movieId})`);
+                        return null;
+                    })
+                );
+                
+                // 모든 상세 정보 요청이 완료될 때까지 기다립니다.
+                const movieDetailResults = await Promise.all(movieDetailPromises);
+
+                // 성공한 요청들만 필터링하고, 실제 데이터(data 프로퍼티)를 추출합니다.
+                const validMovieDetails = movieDetailResults
+                    .filter(result => result !== null)
+                    .map(result => result.data);
+                
+                setFilmography(validMovieDetails);
+
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFilmography();
+    }, [id]);
 
     return (
         <>
@@ -44,35 +88,43 @@ const DirectorDetailPage = () => {
                 <Navbar underline={true} />
                 <Container>
                     <LeftSection>
-                        <ProfileImage src={director.profileImage} alt={director.name} />
-                        <DirectorName>{director.name}</DirectorName>
+                        <ProfileImage src={photoUrl || 'https://placehold.co/300x450/e2e8f0/e2e8f0?text=Image'} alt={name} />
+                        <DirectorName>{name}</DirectorName>
                         {user.role === "admin" && (
                             <ActionButtons>
-                                <EditButton to="/createDirector"><FaEdit /> 수정하기</EditButton>
+                                <EditButton to={`/edit-director/${id}`} state={{ name, photoUrl }}><FaEdit /> 수정하기</EditButton>
                                 <DeleteButton><FaTrashAlt /> 삭제하기</DeleteButton>
                             </ActionButtons>
                         )}
                     </LeftSection>
                     <RightSection>
                         <SectionTitle>필모그래피</SectionTitle>
-                        <FilmographyGrid>
-                            {director.filmography.map((film, index) => (
-                                <FilmCard key={film.id} delay={index}>
-                                     <PosterLink to={`/movie/${film.id}`}>
-                                        <FilmPoster src={film.poster} alt={film.title} />
-                                        <HoverOverlay>
-                                            <DetailButton>
-                                                상세보기
-                                            </DetailButton>
-                                        </HoverOverlay>
-                                    </PosterLink>
-                                    <FilmInfo>
-                                        <FilmTitle>{film.title}</FilmTitle>
-                                        <FilmYear>{film.year}</FilmYear>
-                                    </FilmInfo>
-                                </FilmCard>
-                            ))}
-                        </FilmographyGrid>
+                        {loading && <StatusText>필모그래피를 불러오는 중...</StatusText>}
+                        {error && <StatusText error>{error}</StatusText>}
+                        {!loading && !error && (
+                            <FilmographyGrid>
+                                {filmography.length > 0 ? (
+                                    filmography.map((film, index) => (
+                                        <FilmCard key={film.id} delay={index}>
+                                            <PosterLink to={`/movie/${film.id}`}>
+                                                {/* API 응답의 posterUrls를 사용합니다. */}
+                                                <FilmPoster src={film.posterUrls} alt={film.title} />
+                                                <HoverOverlay>
+                                                    <DetailButton>상세보기</DetailButton>
+                                                </HoverOverlay>
+                                            </PosterLink>
+                                            <FilmInfo>
+                                                <FilmTitle>{film.title}</FilmTitle>
+                                                {/* API 응답의 releaseDate 배열에서 연도를 추출합니다. */}
+                                                <FilmYear>{film.releaseDate[0]}</FilmYear>
+                                            </FilmInfo>
+                                        </FilmCard>
+                                    ))
+                                ) : (
+                                    <StatusText>등록된 필모그래피가 없습니다.</StatusText>
+                                )}
+                            </FilmographyGrid>
+                        )}
                     </RightSection>
                 </Container>
             </MockUserProvider>
@@ -82,7 +134,7 @@ const DirectorDetailPage = () => {
 
 export default DirectorDetailPage;
 
-// --- STYLED COMPONENTS ---
+// --- STYLED COMPONENTS (이하 동일) ---
 
 const primaryBlue = '#1E6DFF';
 const darkGray = '#212529';
@@ -128,9 +180,11 @@ const LeftSection = styled.div`
 
 const ProfileImage = styled.img`
   width: 100%;
+  height: 450px;
   border-radius: 12px;
   object-fit: cover;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  background-color: ${lightGray};
 `;
 
 const DirectorName = styled.h2`
@@ -206,6 +260,14 @@ const SectionTitle = styled.h3`
   color: ${darkGray};
 `;
 
+const StatusText = styled.p`
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+    color: ${props => props.error ? red : mediumGray};
+    grid-column: 1 / -1; /* 그리드 전체 영역을 차지하도록 설정 */
+`;
+
 const FilmographyGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -253,17 +315,18 @@ const FilmPoster = styled.img`
   height: 240px;
   object-fit: cover;
   display: block;
+  background-color: ${lightGray};
 `;
 
 const FilmInfo = styled.div`
-  padding: 12px;
+  padding: 12px 0;
 `;
 
 const FilmCard = styled.div`
   text-decoration: none;
   color: black;
   border-radius: 10px;
-  overflow: hidden;
+  /* overflow: hidden; */ /* 제목이 길 경우 잘리는 문제로 주석 처리 */
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   background-color: #fff;
   opacity: 0;
@@ -285,9 +348,11 @@ const FilmTitle = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 0 12px; /* FilmInfo 패딩을 이쪽으로 이동 */
 `;
 
 const FilmYear = styled.div`
   font-size: 13px;
   color: #868e96;
+  padding: 0 12px; /* FilmInfo 패딩을 이쪽으로 이동 */
 `;

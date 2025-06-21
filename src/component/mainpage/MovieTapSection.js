@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import MovieGrid from './MovieGrid';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaSearch, FaCaretDown } from "react-icons/fa";
 
 // --- 스타일 상수 ---
@@ -31,8 +31,9 @@ const useDropdown = (initialState = false) => {
 };
 
 // --- 필터링 컴포넌트 ---
-const FilterBar = ({ onApplyFilters }) => {
+const FilterBar = () => {
     // 각 필터의 임시 상태
+    const [tempSearchType, setTempSearchType] = useState('movie');
     const [tempSortOrder, setTempSortOrder] = useState('popularity');
     const [tempGenres, setTempGenres] = useState([]);
     const [tempScreenTypes, setTempScreenTypes] = useState([]);
@@ -40,6 +41,19 @@ const FilterBar = ({ onApplyFilters }) => {
 
     const [isGenreOpen, setIsGenreOpen, genreRef] = useDropdown();
     const [isScreenTypeOpen, setIsScreenTypeOpen, screenTypeRef] = useDropdown();
+    
+    const navigate = useNavigate();
+
+    const isMovieSearch = tempSearchType === 'movie';
+
+    useEffect(() => {
+        if (!isMovieSearch) {
+            setTempSortOrder('popularity');
+            setTempGenres([]);
+            setTempScreenTypes([]);
+        }
+    }, [tempSearchType, isMovieSearch]);
+
 
     const allGenres = ['액션', '코미디', '드라마', '공포', '로맨스', '스릴러'];
     const allScreenTypes = ['2D', '3D', 'IMAX', '4DX'];
@@ -57,28 +71,55 @@ const FilterBar = ({ onApplyFilters }) => {
     };
 
     const handleApply = () => {
-        onApplyFilters({
-            sortOrder: tempSortOrder,
-            genres: tempGenres,
-            screenTypes: tempScreenTypes,
-            searchTerm: tempSearchTerm,
+        navigate('/home', {
+            state: {
+                searchType: tempSearchType,
+                filters: {
+                    query: tempSearchTerm,
+                    sortBy: isMovieSearch ? (tempSortOrder === 'release' ? 'RELEASE_DATE' : 'POPULARITY') : 'POPULARITY', 
+                    genres: isMovieSearch ? tempGenres : [],
+                    screenTypes: isMovieSearch ? tempScreenTypes : [],
+                }
+            }
         });
+    };
+    
+    // 검색 타입에 따라 placeholder 텍스트를 반환하는 함수
+    const getPlaceholderText = () => {
+        switch (tempSearchType) {
+            case 'movie':
+                return "영화를 검색해보세요";
+            case 'actor':
+                return "배우를 검색해보세요";
+            case 'director':
+                return "감독을 검색해보세요";
+            default:
+                return "검색어를 입력해보세요";
+        }
     };
 
     return (
         <FilterContainer>
             <FilterGroup>
-                <Select value={tempSortOrder} onChange={(e) => setTempSortOrder(e.target.value)}>
+                <Select value={tempSearchType} onChange={(e) => setTempSearchType(e.target.value)}>
+                    <option value="movie">영화</option>
+                    <option value="actor">배우</option>
+                    <option value="director">감독</option>
+                </Select>
+            </FilterGroup>
+
+            <FilterGroup>
+                <Select value={tempSortOrder} onChange={(e) => setTempSortOrder(e.target.value)} disabled={!isMovieSearch}>
                     <option value="popularity">인기순</option>
                     <option value="release">최신순</option>
                 </Select>
             </FilterGroup>
 
             <FilterGroup ref={genreRef}>
-                <CustomSelectButton onClick={() => setIsGenreOpen(!isGenreOpen)} open={isGenreOpen}>
-                    {tempGenres.length > 0 ? `${tempGenres[0]} 외 ${tempGenres.length - 1}개` : '장르 선택'} <FaCaretDown />
+                <CustomSelectButton onClick={() => isMovieSearch && setIsGenreOpen(!isGenreOpen)} open={isGenreOpen} disabled={!isMovieSearch}>
+                    {tempGenres.length > 0 ? `${tempGenres.join(', ')}` : '장르 선택'} <FaCaretDown />
                 </CustomSelectButton>
-                {isGenreOpen && (
+                {isGenreOpen && isMovieSearch && (
                     <DropdownList>
                         {allGenres.map(genre => (
                             <CheckboxItem key={genre}>
@@ -90,10 +131,10 @@ const FilterBar = ({ onApplyFilters }) => {
             </FilterGroup>
 
             <FilterGroup ref={screenTypeRef}>
-                 <CustomSelectButton onClick={() => setIsScreenTypeOpen(!isScreenTypeOpen)} open={isScreenTypeOpen}>
+                 <CustomSelectButton onClick={() => isMovieSearch && setIsScreenTypeOpen(!isScreenTypeOpen)} open={isScreenTypeOpen} disabled={!isMovieSearch}>
                     {tempScreenTypes.length > 0 ? tempScreenTypes.join(', ') : '상영관 타입'} <FaCaretDown />
                 </CustomSelectButton>
-                {isScreenTypeOpen && (
+                {isScreenTypeOpen && isMovieSearch && (
                     <DropdownList>
                         {allScreenTypes.map(type => (
                             <CheckboxItem key={type}>
@@ -105,9 +146,10 @@ const FilterBar = ({ onApplyFilters }) => {
             </FilterGroup>
             
             <SearchGroup>
+                {/* placeholder를 동적으로 변경 */}
                  <SearchInput 
                     type="text" 
-                    placeholder="영화를 검색해보세요" 
+                    placeholder={getPlaceholderText()}
                     value={tempSearchTerm}
                     onChange={(e) => setTempSearchTerm(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleApply()}
@@ -130,7 +172,7 @@ const MovieTabSection = () => {
 
     return (
         <SectionWrapper>
-            <FilterBar onApplyFilters={setFilters} />
+            <FilterBar />
             <TabContainer>
                 <TabList>
                     <Tab active={activeTab === 'chart'} onClick={() => setActiveTab('chart')}>무비차트</Tab>
@@ -178,6 +220,13 @@ const Select = styled.select`
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 40px;
+
+  &:disabled {
+    background-color: ${lightGray};
+    color: ${mediumGray};
+    cursor: not-allowed;
+    border-color: ${mediumGray};
+  }
 `;
 
 const CustomSelectButton = styled.button`
@@ -198,13 +247,24 @@ const CustomSelectButton = styled.button`
         transition: transform 0.2s ease;
         transform: ${({ open }) => (open ? 'rotate(180deg)' : 'rotate(0deg)')};
     }
+
+    &:disabled {
+        background-color: ${lightGray};
+        color: ${mediumGray};
+        cursor: not-allowed;
+        border-color: ${mediumGray};
+
+        svg {
+            color: ${mediumGray};
+        }
+    }
 `;
 
 const DropdownList = styled.div`
   position: absolute;
   top: calc(100% + 5px);
   left: 0;
-  width: 100%;
+  min-width: 100%;
   background-color: ${white};
   border: 1px solid ${mediumGray};
   border-radius: 8px;
@@ -220,6 +280,7 @@ const CheckboxItem = styled.label`
   border-radius: 6px;
   cursor: pointer;
   font-size: 15px;
+  white-space: nowrap;
   
   input[type="checkbox"] {
     margin-right: 10px;
