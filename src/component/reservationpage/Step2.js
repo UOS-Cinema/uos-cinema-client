@@ -2,13 +2,21 @@ import React, { useState, useMemo, useEffect, useContext } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { UserContext } from '../../context/UserContext';
+import { useReservationState, useReservationDispatch } from '../../context/ReservationContext';
+import { useCustomerTypes } from '../../context/CustomerTypeContext';
+import { useScreenTypes } from '../../context/ScreenTypeContext';
 
-// 가격 정보
-const prices = {
-    adult: 15000,
-    teen: 13000,
-    senior: 13000,
-    discounted: 10000
+// 고객 유형 영문 -> 한글 변환 헬퍼
+const translateCustomerType = (type) => {
+    switch (type) {
+        case 'ADULT': return '성인';
+        case 'TEEN': return '청소년';
+        case 'CHILD': return '어린이';
+        case 'SENIOR': return '경로';
+        case 'ELDERLY': return '경로';
+        case 'DISCOUNTED': return '우대';
+        default: return type;
+    }
 };
 
 // 인원 선택 컴포넌트
@@ -23,9 +31,14 @@ const PersonCounter = ({ label, count, onIncrease, onDecrease, isIncreaseDisable
     </SelectItem>
 );
 
-// Step2 메인 컴포넌트
-const Step2 = ({ screeningId, counts, setCounts, selectedSeats, setSelectedSeats }) => {
+const Step2 = () => {
     const { user } = useContext(UserContext);
+    const { selectedScreening, screenType, counts, selectedSeats } = useReservationState();
+    const dispatch = useReservationDispatch();
+    const { customerTypes, loading: customerTypesLoading } = useCustomerTypes();
+    const { screenTypes, loading: screenTypesLoading } = useScreenTypes();
+    
+    const screeningId = selectedScreening?.id;
     const [seatLayout, setSeatLayout] = useState([]);
     const [screeningDetails, setScreeningDetails] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -37,7 +50,6 @@ const Step2 = ({ screeningId, counts, setCounts, selectedSeats, setSelectedSeats
             setLoading(false);
             return;
         }
-
         const fetchScreeningDetails = async () => {
             setLoading(true);
             setError(null);
@@ -68,69 +80,82 @@ const Step2 = ({ screeningId, counts, setCounts, selectedSeats, setSelectedSeats
         fetchScreeningDetails();
     }, [screeningId, user]);
 
-    // 부모로부터 받은 counts prop으로 계산
+    const totalPrice = useMemo(() => {
+        const screenTypeData = screenTypes.find(st => st.type === screenType);
+        const basePrice = screenTypeData?.price || 0;
+        
+        if (basePrice === 0 || !customerTypes || customerTypes.length === 0) return 0;
+
+        return Object.entries(counts).reduce((sum, [type, count]) => {
+            const customerTypeData = customerTypes.find(ct => ct.type === type);
+            const discountAmount = customerTypeData?.discountAmount || 0;
+            
+            const finalPricePerTicket = basePrice - discountAmount;
+            return sum + (finalPricePerTicket * count);
+        }, 0);
+    }, [counts, screenType, screenTypes, customerTypes]);
+
     const totalPeople = useMemo(() => Object.values(counts).reduce((sum, count) => sum + count, 0), [counts]);
     
-    // 로딩 중이거나, screeningDetails가 없을 때 기본값(8)을 사용하도록 하여 초기 오류 방지
     const maxSelectable = useMemo(() => {
         if (!screeningDetails) return 8; 
         return Math.min(8, screeningDetails.availableSeats);
     }, [screeningDetails]);
     
-    const totalPrice = useMemo(() => {
-        return Object.entries(counts).reduce((sum, [type, count]) => sum + (prices[type] * count), 0);
-    }, [counts]);
-    
-    // 인원수 변경 핸들러
     const handleCountChange = (type, delta) => {
-        // 인원을 늘리려고 할 때, 로딩 중이 아닐 때만 최대 인원수 체크
         if (delta > 0 && !loading && totalPeople >= maxSelectable) {
             alert(`최대 ${maxSelectable}명까지 선택할 수 있습니다. (잔여 좌석: ${screeningDetails.availableSeats}석)`);
             return;
         }
-
-        const newCount = counts[type] + delta;
-        // setCounts가 함수인지 확인하여 예기치 않은 오류 방지
-        if (newCount >= 0 && typeof setCounts === 'function') {
-            setCounts(prev => ({ ...prev, [type]: newCount }));
+        const newCount = (counts[type] || 0) + delta;
+        if (newCount >= 0) {
+            const newCounts = { ...counts, [type]: newCount };
+            dispatch({ type: 'SET_COUNTS', payload: newCounts });
         }
     };
     
-    // 좌석 클릭 핸들러
-    const handleSeatClick = (x, y) => {
-        const seatStatus = seatLayout[y]?.[x];
-        if (seatStatus !== 'SEAT') return;
+    // --- handleSeatClick 수정 ---
+    // 이제 (x, y) 좌표 대신 정확한 seatId를 직접 받습니다.
+    const handleSeatClick = (seatId, seatType) => {
+        if (seatType !== 'SEAT') return;
         
-        const seatId = `${String.fromCharCode(65 + y)}${x + 1}`;
         const isSelected = selectedSeats.includes(seatId);
 
         if (isSelected) {
-            // setSelectedSeats가 함수인지 확인하여 예기치 않은 오류 방지
-            if(typeof setSelectedSeats === 'function') {
-                setSelectedSeats(selectedSeats.filter(id => id !== seatId));
-            }
+            const newSeats = selectedSeats.filter(id => id !== seatId);
+            dispatch({ type: 'SET_SEATS', payload: newSeats });
         } else {
             if (selectedSeats.length < totalPeople) {
-                if(typeof setSelectedSeats === 'function') {
-                    setSelectedSeats([...selectedSeats, seatId]);
-                }
+                const newSeats = [...selectedSeats, seatId];
+                dispatch({ type: 'SET_SEATS', payload: newSeats });
             } else {
                 alert('선택한 인원수만큼 좌석을 선택할 수 있습니다.');
             }
         }
     };
 
+    const globalLoading = loading || customerTypesLoading || screenTypesLoading;
+
     if (error) return <StatusText>{error}</StatusText>;
+    if (globalLoading && !screeningDetails) return <StatusText>예매 정보를 불러오는 중...</StatusText>;
 
     const isIncreaseDisabled = totalPeople >= maxSelectable;
 
     return (
         <Container>
             <TopSection>
-                <PersonCounter label="성인" count={counts.adult} onIncrease={() => handleCountChange('adult', 1)} onDecrease={() => handleCountChange('adult', -1)} isIncreaseDisabled={isIncreaseDisabled} disabled={loading} />
-                <PersonCounter label="청소년" count={counts.teen} onIncrease={() => handleCountChange('teen', 1)} onDecrease={() => handleCountChange('teen', -1)} isIncreaseDisabled={isIncreaseDisabled} disabled={loading} />
-                <PersonCounter label="경로" count={counts.senior} onIncrease={() => handleCountChange('senior', 1)} onDecrease={() => handleCountChange('senior', -1)} isIncreaseDisabled={isIncreaseDisabled} disabled={loading} />
-                <PersonCounter label="우대" count={counts.discounted} onIncrease={() => handleCountChange('discounted', 1)} onDecrease={() => handleCountChange('discounted', -1)} isIncreaseDisabled={isIncreaseDisabled} disabled={loading} />
+                {customerTypes.map(customer => (
+                    <PersonCounter 
+                        key={customer.type}
+                        label={translateCustomerType(customer.type)}
+                        count={counts[customer.type] || 0}
+                        onIncrease={() => handleCountChange(customer.type, 1)}
+                        onDecrease={() => handleCountChange(customer.type, -1)}
+                        isIncreaseDisabled={isIncreaseDisabled}
+                        disabled={globalLoading}
+                    />
+                ))}
+                
                 <PriceContainer>
                     <PriceLabel>총 금액</PriceLabel>
                     <TotalPrice>{totalPrice.toLocaleString()}원</TotalPrice>
@@ -146,7 +171,7 @@ const Step2 = ({ screeningId, counts, setCounts, selectedSeats, setSelectedSeats
                         <SeatSelectionArea>
                             <SeatContainer>
                                 {seatLayout.map((row, y) => {
-                                    let seatNumber = 1;
+                                    let seatNumber = 1; // 보이는 좌석 번호 카운터
                                     return (
                                         <SeatRow key={y}>
                                             <RowLabel>{String.fromCharCode(65 + y)}</RowLabel>
@@ -155,6 +180,8 @@ const Step2 = ({ screeningId, counts, setCounts, selectedSeats, setSelectedSeats
                                                     return <Aisle key={`${y}-${x}`} />;
                                                 }
 
+                                                // --- 올바른 seatId 생성 ---
+                                                // 보이는 좌석 번호를 사용해 ID 생성 (예: 'A1', 'A2', ...)
                                                 const seatId = `${String.fromCharCode(65 + y)}${seatNumber}`;
                                                 const isSelected = selectedSeats.includes(seatId);
                                                 const isDisabled = seatType !== 'SEAT';
@@ -165,7 +192,9 @@ const Step2 = ({ screeningId, counts, setCounts, selectedSeats, setSelectedSeats
                                                         key={seatId}
                                                         isSelected={isSelected}
                                                         disabled={isDisabled}
-                                                        onClick={() => handleSeatClick(x, y)}
+                                                        // --- onClick 핸들러 수정 ---
+                                                        // 이제 좌표(x,y) 대신 생성된 seatId와 seatType을 직접 전달
+                                                        onClick={() => handleSeatClick(seatId, seatType)}
                                                     >
                                                         <SeatNumber isSelected={isSelected}>{currentSeatNumber}</SeatNumber>
                                                     </SeatBox>
@@ -191,7 +220,6 @@ const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 `;
-
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -200,7 +228,6 @@ const Container = styled.div`
   background-color: #f8f9fa;
   animation: ${fadeIn} 0.6s ease-out;
 `;
-
 const StatusText = styled.div`
     display: flex;
     justify-content: center;
@@ -210,7 +237,6 @@ const StatusText = styled.div`
     font-size: 20px;
     color: #868e96;
 `;
-
 const TopSection = styled.div`
   display: flex;
   justify-content: center;
@@ -221,7 +247,6 @@ const TopSection = styled.div`
   flex-wrap: wrap;
   gap: 20px;
 `;
-
 const SelectItem = styled.div`
   display: flex;
   align-items: center;
@@ -231,14 +256,12 @@ const SelectItem = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 `;
-
 const Label = styled.span`
   font-size: 16px;
   font-weight: 500;
   color: #333;
   min-width: 50px;
 `;
-
 const Counter = styled.div`
     display: flex;
     align-items: center;
@@ -247,7 +270,6 @@ const Counter = styled.div`
     border-radius: 20px;
     padding: 2px;
 `;
-
 const CounterButton = styled.button`
   width: 30px;
   height: 30px;
@@ -262,12 +284,10 @@ const CounterButton = styled.button`
   font-size: 14px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transition: all 0.2s ease;
-
   &:hover:not(:disabled) {
     background-color: #1E6DFF;
     color: white;
   }
-  
   &:disabled {
     background-color: #e9ecef;
     color: #adb5bd;
@@ -275,7 +295,6 @@ const CounterButton = styled.button`
     opacity: 0.7;
   }
 `;
-
 const Number = styled.span`
   font-size: 18px;
   font-weight: 700;
@@ -283,7 +302,6 @@ const Number = styled.span`
   min-width: 25px;
   text-align: center;
 `;
-
 const PriceContainer = styled.div`
     display: flex;
     align-items: center;
@@ -292,19 +310,16 @@ const PriceContainer = styled.div`
     padding-left: 30px;
     border-left: 2px solid #e9ecef;
 `;
-
 const PriceLabel = styled.span`
     font-size: 16px;
     font-weight: 500;
     color: #555;
 `;
-
 const TotalPrice = styled.div`
   font-size: 24px;
   font-weight: 900;
   color: #1E6DFF;
 `;
-
 const BottomSection = styled.div`
   flex: 1;
   display: flex;
@@ -312,7 +327,6 @@ const BottomSection = styled.div`
   padding: 24px;
   min-height: 0;
 `;
-
 const Screen = styled.div`
   width: 80%;
   margin: 0 auto;
@@ -327,32 +341,27 @@ const Screen = styled.div`
   box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
   margin-bottom: 30px;
 `;
-
 const SeatSelectionArea = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 10px;
   display: flex;
   justify-content: center;
-  
   &::-webkit-scrollbar { width: 8px; }
   &::-webkit-scrollbar-thumb { background-color: #ced4da; border-radius: 4px; }
   &::-webkit-scrollbar-track { background-color: #f1f3f5; }
 `;
-
 const SeatContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
 `;
-
 const SeatRow = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
 `;
-
 const RowLabel = styled.div`
   width: 30px;
   text-align: center;
@@ -360,12 +369,10 @@ const RowLabel = styled.div`
   font-weight: 700;
   color: #868e96;
 `;
-
 const Aisle = styled.div`
     width: 30px;
     height: 30px;
 `;
-
 const SeatBox = styled.div`
   width: 30px;
   height: 30px;
@@ -381,13 +388,11 @@ const SeatBox = styled.div`
     isSelected ? '#1E6DFF' : 
     disabled ? '#868e96' : '#adb5bd'};
   transition: all 0.2s ease-in-out;
-
   &:hover {
     transform: ${({ disabled }) => disabled ? 'none' : 'scale(1.15)'};
     box-shadow: ${({ disabled }) => disabled ? 'none' : '0 4px 10px rgba(30, 109, 255, 0.3)'};
   }
 `;
-
 const SeatNumber = styled.span`
   font-size: 12px;
   font-weight: 500;

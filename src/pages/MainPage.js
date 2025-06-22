@@ -6,6 +6,7 @@ import TopReservationBanner from "../component/mainpage/TopReservationBanner";
 // UserContext는 필요 시 주석을 해제하여 사용하세요.
 import { useContext } from 'react';
 import { UserContext } from '../context/UserContext';
+import { GenreContext } from '../context/GenreContext';
 
 const MainPageContainer = styled.div`
   background-color: #f8f9fa; /* 전체 페이지 배경색 */

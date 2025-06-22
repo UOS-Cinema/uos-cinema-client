@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useReservationState, useReservationDispatch } from '../../context/ReservationContext'; // Context 훅 임포트
 
 // 영화 목업 데이터
 const sampleMovies = [
@@ -11,13 +12,16 @@ const sampleMovies = [
     { id: 6, title: "거룩한 밤", runningTime: 125, ageRating: "18" },
 ];
 
-// --- 부모로부터 props를 받도록 수정 ---
-const Step1 = ({ selectedScreening, setSelectedScreening }) => {
-    // --- 상태 관리 ---
+// props를 받지 않도록 시그니처 수정
+const Step1 = () => {
+    // --- Context에서 상태와 dispatch 함수 가져오기 ---
+    const { selectedScreening } = useReservationState();
+    const dispatch = useReservationDispatch();
+
+    // --- Step1 내부에서만 사용할 로컬 상태 관리 ---
     const [movies] = useState(sampleMovies); 
     const [selectedMovie, setSelectedMovie] = useState(movies[0]); 
     const [selectedDate, setSelectedDate] = useState(new Date()); 
-    // selectedScreening 상태는 부모(BookingPage)에서 관리하므로 제거
     
     const [groupedScreenings, setGroupedScreenings] = useState({}); 
     const [loading, setLoading] = useState(false);
@@ -58,7 +62,11 @@ const Step1 = ({ selectedScreening, setSelectedScreening }) => {
             setLoading(true);
             setError(null);
             setGroupedScreenings({}); 
-            setSelectedScreening(null); // 부모의 상태를 업데이트
+            
+            // 영화나 날짜가 변경되면, Context의 선택 상태를 초기화
+            dispatch({ type: 'SELECT_SCREENING', payload: null });
+            dispatch({ type: 'RESET_SELECTION' });
+
 
             const dateString = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
             const params = new URLSearchParams({ movieId: selectedMovie.id, date: dateString });
@@ -99,13 +107,25 @@ const Step1 = ({ selectedScreening, setSelectedScreening }) => {
         };
 
         fetchScreenings();
-    }, [selectedMovie, selectedDate, setSelectedScreening]); // setSelectedScreening 의존성 추가
+    }, [selectedMovie, selectedDate, dispatch]);
 
-    // 다음 단계 버튼과 핸들러 제거됨
+    // 시간 클릭 시, Context의 상태를 업데이트하는 핸들러
+    const handleTimeSelect = (screeningTime, group) => {
+        const fullScreeningInfo = {
+            ...screeningTime,
+            theaterId: group.theaterId,
+            theaterName: group.theaterName,
+            screenType: group.screenType,
+            movieTitle: selectedMovie.title,
+            ageRating: selectedMovie.ageRating,
+            fullDate: selectedDate,
+        };
+        // dispatch를 사용하여 전역 상태 업데이트
+        dispatch({ type: 'SELECT_SCREENING', payload: fullScreeningInfo });
+    };
 
     return (
         <Step1Container>
-            {/* 왼쪽: 영화 선택 패널 */}
             <MovieSelection>
                 <SectionTitle>영화 선택</SectionTitle>
                 {movies.map((movie) => (
@@ -120,7 +140,6 @@ const Step1 = ({ selectedScreening, setSelectedScreening }) => {
                 ))}
             </MovieSelection>
 
-            {/* 오른쪽: 날짜 및 시간 선택 패널 */}
             <TimeSelection>
                 <DateSelectionWrapper>
                     <MonthLabel>{dateRange[0]?.getFullYear()}년 {dateRange[0]?.getMonth() + 1}월</MonthLabel>
@@ -158,7 +177,7 @@ const Step1 = ({ selectedScreening, setSelectedScreening }) => {
                                         <TimeItem
                                             key={screeningTime.id}
                                             active={selectedScreening?.id === screeningTime.id}
-                                            onClick={() => setSelectedScreening(screeningTime)}
+                                            onClick={() => handleTimeSelect(screeningTime, group)}
                                         >
                                             <TimeItemSchedule active={selectedScreening?.id === screeningTime.id}>{screeningTime.time}</TimeItemSchedule>
                                             <TimeItemInfo active={selectedScreening?.id === screeningTime.id}>
@@ -175,7 +194,6 @@ const Step1 = ({ selectedScreening, setSelectedScreening }) => {
                 </MovieListWithTime>
             </TimeSelection>
         </Step1Container>
-        // Footer 및 NextButton 제거됨
     );
 };
 
@@ -193,7 +211,6 @@ const Step1Container = styled.div`
   height: 100%;
   animation: ${fadeIn} 0.6s ease-out;
 `;
-// ... (이전과 동일한 모든 스타일 컴포넌트)
 const SectionTitle = styled.h2`
   font-size: 18px;
   font-weight: 700;
@@ -222,6 +239,7 @@ const MovieItem = styled.div`
   background: ${({ active }) => (active ? "#eff6ff" : "transparent")};
   border-right: ${({ active }) => (active ? "3px solid #1E6DFF" : "3px solid transparent")};
   transition: all 0.3s ease;
+
   &:hover {
     background: #f8f9fa;
     border-right-color: #66A3F2;
@@ -266,6 +284,7 @@ const ArrowButton = styled.div`
   color: #868e96;
   transition: all 0.3s ease;
   flex-shrink: 0;
+
   &:hover {
     background-color: #f1f3f5;
     color: #343a40;
@@ -290,6 +309,7 @@ const DateItem = styled.div`
   border-radius: 8px;
   gap: 8px;
   color: ${({ weekday }) => (weekday === "토" ? "#007bff" : weekday === "일" ? "#dc3545" : "#495057")};
+
   &:hover {
       background-color: #f8f9fa;
   }
@@ -356,6 +376,7 @@ const TimeItem = styled.div`
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.3s ease;
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);

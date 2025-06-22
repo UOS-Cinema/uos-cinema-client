@@ -26,38 +26,59 @@ import AdminManagePage from "./pages/admin/AdminManagePage";
 import MovieManagePage from "./pages/admin/MovieManagePage";
 import EditMoviePage from "./pages/admin/EditMovePAge";
 import CreateTheaterPage from "./pages/admin/CreateTheaterPage";
+import { GenreProvider } from "./context/GenreContext";
+import { CardCompanyProvider } from "./context/CardCompanyContext";
+import { BankProvider } from "./context/BankContext";
+import { ScreenTypeProvider } from "./context/ScreenTypeContext";
+import { CustomerTypeProvider } from "./context/CustomerTypeContext";
+import { ReservationProvider } from "./context/ReservationContext";
 function App() {
   return (
     <UserProvider>
-      <Router>
-        <ScrollToTop /> 
-        <Routes>
-          <Route path="/" element={<MainPage />} />
-          <Route path="/movie/:id" element={<MovieDetailPage />} />
-          <Route path="/reservation" element={<ReservationPage />} />
-          <Route path="/movieChart" element={<MovieChartPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/mypage" element={<MyPage />} />
-          <Route path="/home" element={<HomePage/>}/>
-          <Route path="/schedule" element={<SchedulePage/>}/>
-          <Route path="/director/:id" element={<DirectorDetailPage/>}/>
-          <Route path="/actor" element={<ActorDetailPage/>}/>
+      <GenreProvider>
+        <CardCompanyProvider>
+          <BankProvider>
+            <ScreenTypeProvider>
+              <CustomerTypeProvider>
+                <ReservationProvider>
 
-          <Route path="/movieManage" element={<MovieManagePage/>}/>
-          <Route path="/theaterList" element={<TheaterListPage/>}/>
-          <Route path="/theaterDetail/:id" element={<TheaterDetailPage/>}/>
-          <Route path="/theaterEdit/:id" element={<TheaterEditPage/>}/>
-          <Route path="/theater/create" element={<CreateTheaterPage/>}/>
-          <Route path="/scheduleManage" element={<ScheduleManagePage/>}/>
-          <Route path="/paymentPolicy" element={<PaymentPolicyPage/>}/>
-          <Route path="/createDirector" element={<CreateDirectorPage/>}/>
-          <Route path="/createActor" element={<CreateActorPage/>}/>
-          <Route path="/createMovie" element={<CreateMoviePage/>}/>
-          <Route path="/adminManage" element={<AdminManagePage/>}/>
-          <Route path="/editMovie" element={<EditMoviePage/>}/>
-        </Routes>
-      </Router>
+
+
+                  <Router>
+                    <ScrollToTop />
+                    <Routes>
+                      <Route path="/" element={<MainPage />} />
+                      <Route path="/movie/:id" element={<MovieDetailPage />} />
+                      <Route path="/reservation" element={<ReservationPage />} />
+                      <Route path="/movieChart" element={<MovieChartPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignUpPage />} />
+                      <Route path="/mypage" element={<MyPage />} />
+                      <Route path="/home" element={<HomePage />} />
+                      <Route path="/schedule" element={<SchedulePage />} />
+                      <Route path="/director/:id" element={<DirectorDetailPage />} />
+                      <Route path="/actor" element={<ActorDetailPage />} />
+
+                      <Route path="/movieManage" element={<MovieManagePage />} />
+                      <Route path="/theaterList" element={<TheaterListPage />} />
+                      <Route path="/theaterDetail/:id" element={<TheaterDetailPage />} />
+                      <Route path="/theaterEdit/:id" element={<TheaterEditPage />} />
+                      <Route path="/theater/create" element={<CreateTheaterPage />} />
+                      <Route path="/scheduleManage" element={<ScheduleManagePage />} />
+                      <Route path="/paymentPolicy" element={<PaymentPolicyPage />} />
+                      <Route path="/createDirector" element={<CreateDirectorPage />} />
+                      <Route path="/createActor" element={<CreateActorPage />} />
+                      <Route path="/createMovie" element={<CreateMoviePage />} />
+                      <Route path="/adminManage" element={<AdminManagePage />} />
+                      <Route path="/editMovie" element={<EditMoviePage />} />
+                    </Routes>
+                  </Router>
+                </ReservationProvider>
+              </CustomerTypeProvider>
+            </ScreenTypeProvider>
+          </BankProvider>
+        </CardCompanyProvider>
+      </GenreProvider>
     </UserProvider>
   );
 }
