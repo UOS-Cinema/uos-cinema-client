@@ -289,9 +289,6 @@ const Navbar = ({ underline }) => {
             </MenuItem>
           )}
 
-          <MenuItem>
-            <StyledLink to="/mypage">마이페이지</StyledLink>
-          </MenuItem>
         </Menu>
       }
     </NavbarContainer>

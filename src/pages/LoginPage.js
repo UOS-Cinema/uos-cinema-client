@@ -9,132 +9,167 @@ import { UserContext } from "../context/UserContext";
 const LoginPage = () => {
     const [activeMainTab, setActiveMainTab] = useState("member");
     const { setUser } = useContext(UserContext);
-    const [id, setId] = useState('');
-    const [password, setPassword] = useState('');
     const navigate = useNavigate();
-   
-    // handleLogin 함수를 async/await를 사용하도록 변경
+    
+    // 회원, 관리자 폼 상태
+    const [credentials, setCredentials] = useState({ username: '', password: '' });
+    // 비회원 폼 상태
+    const [guestInfo, setGuestInfo] = useState({
+        name: '',
+        phone: '',
+        birthYear: '',
+        birthMonth: '',
+        birthDay: '',
+        password: '',
+        passwordConfirm: ''
+    });
+
+    // 각 폼의 입력값 변경을 처리하는 핸들러
+    const handleCredentialChange = (e) => {
+        const { name, value } = e.target;
+        setCredentials(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleGuestInfoChange = (e) => {
+        const { name, value } = e.target;
+        setGuestInfo(prev => ({ ...prev, [name]: value }));
+    };
+    
+    // --- 통합 로그인 핸들러 ---
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        if (!id || !password) {
-            alert("아이디와 비밀번호를 입력해주세요.");
-            return;
+        let endpoint = '';
+        let payload = {};
+        let loginType = '';
+
+        // 현재 활성화된 탭에 따라 요청 정보 설정
+        switch(activeMainTab) {
+            case 'admin':
+            case 'member':
+                if (!credentials.username || !credentials.password) {
+                    alert("아이디와 비밀번호를 입력해주세요.");
+                    return;
+                }
+                endpoint = activeMainTab === 'admin' ? '/admins/login' : '/members/login';
+                payload = { username: credentials.username, password: credentials.password };
+                loginType = activeMainTab;
+                break;
+            
+            case 'guest':
+                if (!guestInfo.name || !guestInfo.phone || !guestInfo.birthYear || !guestInfo.password) {
+                    alert("모든 정보를 입력해주세요.");
+                    return;
+                }
+                if (guestInfo.password !== guestInfo.passwordConfirm) {
+                    alert("예매 비밀번호가 일치하지 않습니다.");
+                    return;
+                }
+                endpoint = '/guests/login';
+                payload = {
+                    name: guestInfo.name,
+                    phone: guestInfo.phone,
+                    birthDate: `${guestInfo.birthYear}-${guestInfo.birthMonth.padStart(2, '0')}-${guestInfo.birthDay.padStart(2, '0')}`,
+                    password: guestInfo.password
+                };
+                loginType = 'guest';
+                break;
+            
+            default:
+                return;
         }
 
-        // 관리자 탭에서 로그인 시도
-        if (activeMainTab === "admin") {
-            try {
-                // 참고: 요청하신 'amins'는 'admins'의 오타일 가능성이 높아 'admins'로 수정했습니다.
-                console.log(id);
-                console.log(password);
-                const response = await fetch('/admins/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username: id,
-                        password: password,
-                    }),
-                });
+        // API 요청
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
 
-                const data = await response.json();
+            const data = await response.json();
 
-                if (!response.ok) {
-                    // 서버가 에러 메시지를 보내는 경우, 해당 메시지를 띄움
-                    throw new Error(data.message || '로그인에 실패했습니다.');
-                }
-                console.log(data.data.accessToken);
-                // accessToken을 정상적으로 받아온 경우
-                const  accessToken  = data.data.accessToken;
-                console.log(accessToken);
-                // 받아온 accessToken을 localStorage에 저장 (웹 세션 유지용)
-                localStorage.setItem('accessToken', accessToken);
-
-                setUser({ id: id, role: "admin", accessToken:accessToken });
-                alert("관리자로 로그인되었습니다.");
-                navigate("/"); // 관리자 페이지 또는 메인 페이지로 이동
-
-            } catch (error) {
-                console.error("Admin login error:", error);
-                alert(error.message || "로그인 중 오류가 발생했습니다.");
+            if (!response.ok) {
+                throw new Error(data.message || '로그인에 실패했습니다.');
             }
 
-        // 회원 탭에서 로그인 시도 (기존 로직 유지)
-        } else if (activeMainTab === "member") {
-            // 여기는 실제 회원 로그인 API 연동 로직으로 대체될 수 있습니다.
-            setUser({ id: id, role: "member" });
-            alert("로그인 성공!");
+            const accessToken = data.data.accessToken;
+            localStorage.setItem('accessToken', accessToken);
+
+            // 로그인 유형에 따라 UserContext 상태 설정
+            const loggedInUser = {
+                id: loginType === 'guest' ? guestInfo.name : credentials.username,
+                role: loginType,
+                accessToken: accessToken,
+            };
+            setUser(loggedInUser);
+
+            alert(`${loginType === 'guest' ? '비회원 예매조회에' : '로그인에'} 성공했습니다.`);
             navigate("/");
+
+        } catch (error) {
+            console.error(`${loginType} login error:`, error);
+            alert(error.message || "로그인 중 오류가 발생했습니다.");
         }
     };
     
     return (
         <>
             <GlobalStyle />
-
-                <Container>
-                    <Navbar underline={true} />
-                    <LoginContainer>
-                        <TabMenu>
-                            <Tab active={activeMainTab === "member"} onClick={() => setActiveMainTab("member")}>
-                                회원
-                            </Tab>
-                            <Tab active={activeMainTab === "admin"} onClick={() => setActiveMainTab("admin")}>
-                                관리자
-                            </Tab>
-                            <Tab active={activeMainTab === "guest"} onClick={() => setActiveMainTab("guest")}>
-                                비회원
-                            </Tab>
-                        </TabMenu>
-                        <Form onSubmit={handleLogin}>
-                            {activeMainTab === "member" && (
-                                <>
-                                    <Input type="text" placeholder="아이디" value={id} onChange={(e) => setId(e.target.value)} />
-                                    <Input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
-                                    <LoginButton type="submit">로그인</LoginButton>
-                                    <LinkButtonWrapper>
-                                        <StyledLink to="/signup">회원가입</StyledLink>
-                                        <span>|</span>
-                                        <StyledLink to="/find-credentials">아이디/비밀번호 찾기</StyledLink>
-                                    </LinkButtonWrapper>
-                                </>
-                            )}
-                            {activeMainTab === "admin" && (
-                                <>
-                                    <Input type="text" placeholder="아이디" value={id} onChange={(e) => setId(e.target.value)} />
-                                    <Input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} />
-                                    <LoginButton type="submit">로그인</LoginButton>
-                                </>
-                            )}
-                            {activeMainTab === "guest" && (
-                                <>
-                                    <Input type="text" placeholder="이름" />
-                                    <Input type="tel" placeholder="휴대폰 번호" />
-                                    <DateSelectWrapper>
-                                        <Select>
-                                            <option>년</option>
-                                            {Array.from({ length: 100 }, (_, i) => <option key={i}>{new Date().getFullYear() - i}</option>)}
-                                        </Select>
-                                        <Select>
-                                            <option>월</option>
-                                            {[...Array(12)].map((_, i) => <option key={i}>{i + 1}</option>)}
-                                        </Select>
-                                        <Select>
-                                            <option>일</option>
-                                            {[...Array(31)].map((_, i) => <option key={i}>{i + 1}</option>)}
-                                        </Select>
-                                    </DateSelectWrapper>
-                                    <Input type="password" placeholder="예매 비밀번호 (숫자 4자리)" />
-                                    <Input type="password" placeholder="예매 비밀번호 확인" />
-                                    <LoginButton type="button">비회원 예매 확인</LoginButton>
-                                </>
-                            )}
-                        </Form>
-                    </LoginContainer>
-                </Container>
-
+            <Container>
+                <Navbar underline={true} />
+                <LoginContainer>
+                    <TabMenu>
+                        <Tab active={activeMainTab === "member"} onClick={() => setActiveMainTab("member")}>회원</Tab>
+                        <Tab active={activeMainTab === "admin"} onClick={() => setActiveMainTab("admin")}>관리자</Tab>
+                        <Tab active={activeMainTab === "guest"} onClick={() => setActiveMainTab("guest")}>비회원</Tab>
+                    </TabMenu>
+                    <Form onSubmit={handleLogin}>
+                        {activeMainTab === "member" && (
+                            <>
+                                <Input type="text" name="username" placeholder="아이디" value={credentials.username} onChange={handleCredentialChange} />
+                                <Input type="password" name="password" placeholder="비밀번호" value={credentials.password} onChange={handleCredentialChange} />
+                                <LoginButton type="submit">로그인</LoginButton>
+                                <LinkButtonWrapper>
+                                    <StyledLink to="/signup">회원가입</StyledLink>
+                                    <span>|</span>
+                                    <StyledLink to="/find-credentials">아이디/비밀번호 찾기</StyledLink>
+                                </LinkButtonWrapper>
+                            </>
+                        )}
+                        {activeMainTab === "admin" && (
+                            <>
+                                <Input type="text" name="username" placeholder="관리자 아이디" value={credentials.username} onChange={handleCredentialChange} />
+                                <Input type="password" name="password" placeholder="비밀번호" value={credentials.password} onChange={handleCredentialChange} />
+                                <LoginButton type="submit">로그인</LoginButton>
+                            </>
+                        )}
+                        {activeMainTab === "guest" && (
+                            <>
+                                <Input type="text" name="name" placeholder="이름" value={guestInfo.name} onChange={handleGuestInfoChange} />
+                                <Input type="tel" name="phone" placeholder="휴대폰 번호" value={guestInfo.phone} onChange={handleGuestInfoChange} />
+                                <DateSelectWrapper>
+                                    <Select name="birthYear" value={guestInfo.birthYear} onChange={handleGuestInfoChange}>
+                                        <option value="">년</option>
+                                        {Array.from({ length: 100 }, (_, i) => <option key={i} value={new Date().getFullYear() - i}>{new Date().getFullYear() - i}</option>)}
+                                    </Select>
+                                    <Select name="birthMonth" value={guestInfo.birthMonth} onChange={handleGuestInfoChange}>
+                                        <option value="">월</option>
+                                        {[...Array(12)].map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+                                    </Select>
+                                    <Select name="birthDay" value={guestInfo.birthDay} onChange={handleGuestInfoChange}>
+                                        <option value="">일</option>
+                                        {[...Array(31)].map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+                                    </Select>
+                                </DateSelectWrapper>
+                                <Input type="password" name="password" placeholder="예매 비밀번호 (숫자 4자리)" value={guestInfo.password} onChange={handleGuestInfoChange} />
+                                <Input type="password" name="passwordConfirm" placeholder="예매 비밀번호 확인" value={guestInfo.passwordConfirm} onChange={handleGuestInfoChange} />
+                                <LoginButton type="submit">비회원 예매 확인</LoginButton>
+                            </>
+                        )}
+                    </Form>
+                </LoginContainer>
+            </Container>
         </>
     );
 };
