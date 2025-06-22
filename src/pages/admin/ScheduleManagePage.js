@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useContext } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import Navbar from "../../component/common/NavBar";
 import TimeTable from "../../component/admin/TimeTable";
-import { FaChevronLeft, FaChevronRight, FaPlus } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { UserContext } from "../../context/UserContext"; // 실제 프로젝트의 UserContext 경로로 수정하세요
 
 // --- 목업 데이터 ---
 const sampleMovies = [
@@ -13,21 +14,28 @@ const sampleMovies = [
     { id: 5, title: "파과", runningTime: 140, ageRating: "18" },
     { id: 6, title: "거룩한 밤", runningTime: 125, ageRating: "18" },
 ];
+
 const sampleTheaters = [
-    { theaterId: 1, name: "C-Language" },
-    { theaterId: 2, name: "C++" },
-    { theaterId: 3, name: "Kotlin" },
-    { theaterId: 4, name: "TS" },
+    { theaterId: 1, name: "C-Language", screenTypes: ['2D', '3D', '4D'] },
+    { theaterId: 2, name: "C++", screenTypes: ['2D'] },
+    { theaterId: 3, name: "Kotlin", screenTypes: ['2D', '3D'] },
+    { theaterId: 4, name: "TS", screenTypes: ['2D'] },
+    { theaterId: 5, name: "5관", screenTypes: ['2D', '3D'] },
+    { theaterId: 6, name: "6관", screenTypes: ['2D'] },
+    { theaterId: 7, name: "7관", screenTypes: ['2D', '3D'] },
+    { theaterId: 8, name: "8관", screenTypes: ['2D'] },
 ];
 // --- 목업 데이터 끝 ---
 
 const ScheduleManagePage = () => {
+    const { user } = useContext(UserContext);
+
     const [selectedMovie, setSelectedMovie] = useState(sampleMovies[0]);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedDate, setSelectedDate] = useState(new Date()); // 선택된 날짜 상태 추가
+    const [selectedDate, setSelectedDate] = useState(new Date()); 
     const [selectedTheater, setSelectedTheater] = useState(sampleTheaters[0]);
+    const [selectedScreenType, setSelectedScreenType] = useState(sampleTheaters[0].screenTypes[0]);
 
-    // 한 주씩 날짜를 이동하는 함수
     const moveDate = (amount) => {
         setCurrentDate(prev => {
             const newDate = new Date(prev);
@@ -35,11 +43,18 @@ const ScheduleManagePage = () => {
             return newDate;
         });
     };
+    
+    useEffect(() => {
+        if (selectedTheater) {
+            const newScreenTypes = selectedTheater.screenTypes;
+            if (!newScreenTypes.includes(selectedScreenType)) {
+                setSelectedScreenType(newScreenTypes[0]);
+            }
+        }
+    }, [selectedTheater, selectedScreenType]);
 
-    // 현재 날짜 기준 7일치 날짜 배열 생성
     const weekDates = useMemo(() => {
         const startOfWeek = new Date(currentDate);
-        // Reset time part to compare dates only
         startOfWeek.setHours(0, 0, 0, 0);
         return Array.from({ length: 7 }, (_, i) => {
             const date = new Date(startOfWeek);
@@ -56,10 +71,8 @@ const ScheduleManagePage = () => {
                 <MainContainer>
                     <Header>
                         <Title>상영일정 관리</Title>
-                        <SaveButton><FaPlus /> 새 일정 저장</SaveButton>
                     </Header>
                     <ScheduleContainer>
-                        {/* 좌측: 영화 목록 */}
                         <LeftPanel>
                             {sampleMovies.map((movie) => (
                                 <MovieItem
@@ -73,7 +86,6 @@ const ScheduleManagePage = () => {
                             ))}
                         </LeftPanel>
 
-                        {/* 중앙: 날짜 및 상영관 선택 */}
                         <MiddlePanel>
                             <DateSelector>
                                 <ArrowButton onClick={() => moveDate(-7)}><FaChevronLeft /></ArrowButton>
@@ -95,15 +107,31 @@ const ScheduleManagePage = () => {
                                         selected={selectedTheater?.theaterId === theater.theaterId}
                                         onClick={() => setSelectedTheater(theater)}
                                     >
-                                        상영관 {theater.theaterId}<span>({theater.name}관)</span>
+                                        상영관 {theater.theaterId}<span>({theater.name})</span>
                                     </TheaterItem>
                                 ))}
                             </TheaterList>
+                            <ScreenTypeSelector>
+                                {selectedTheater && selectedTheater.screenTypes.map(type => (
+                                    <ScreenTypeItem
+                                        key={type}
+                                        selected={selectedScreenType === type}
+                                        onClick={() => setSelectedScreenType(type)}
+                                    >
+                                        {type}
+                                    </ScreenTypeItem>
+                                ))}
+                            </ScreenTypeSelector>
                         </MiddlePanel>
 
-                        {/* 우측: 타임테이블 */}
                         <RightPanel>
-                            <TimeTable selectedMovie={selectedMovie} />
+                            <TimeTable 
+                                selectedMovie={selectedMovie} 
+                                selectedTheater={selectedTheater}
+                                selectedDate={selectedDate}
+                                selectedScreenType={selectedScreenType}
+                                user={user}
+                            />
                         </RightPanel>
                     </ScheduleContainer>
                 </MainContainer>
@@ -142,20 +170,6 @@ const Title = styled.h2`
   font-size: 28px;
   font-weight: 900;
   color: ${darkGray};
-`;
-
-const SaveButton = styled.button`
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    background-color: ${primaryBlue};
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
 `;
 
 const ScheduleContainer = styled.div`
@@ -290,5 +304,30 @@ const TheaterItem = styled.div`
     span {
         font-weight: 500;
         color: #868e96;
+    }
+`;
+
+const ScreenTypeSelector = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid ${mediumGray};
+`;
+
+const ScreenTypeItem = styled.button`
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1.5px solid ${({ selected }) => (selected ? primaryBlue : mediumGray)};
+    background-color: ${({ selected }) => (selected ? primaryBlue : '#fff')};
+    color: ${({ selected }) => (selected ? '#fff' : darkGray)};
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: ${primaryBlue};
     }
 `;

@@ -1,22 +1,78 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Navbar from "../../component/common/NavBar";
 import { Link } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 
-// 샘플 데이터
-const sampleTheaters = [
-    { theaterId: 1, name: "C-Language", types: ["2D", "3D"] },
-    { theaterId: 2, name: "C++", types: ["2D", "4D"] },
-    { theaterId: 3, name: "Kotlin", types: ["2D"] },
-    { theaterId: 4, name: "TS", types: ["2D", "3D"] },
-    { theaterId: 5, name: "JS", types: ["2D", "4D"] },
-    { theaterId: 6, name: "Python", types: ["2D"] },
-    { theaterId: 7, name: "JAVA", types: ["2D", "4D"] },
-    { theaterId: 8, name: "React", types: ["2D"] },
-];
-
 const TheaterListPage = () => {
+    // --- 상태 관리 ---
+    // API로부터 받은 상영관 목록을 저장할 상태
+    const [theaters, setTheaters] = useState([]); 
+    // 데이터 로딩 상태
+    const [loading, setLoading] = useState(true); 
+    // 에러 상태
+    const [error, setError] = useState(null); 
+
+    // --- 데이터 페칭 ---
+    useEffect(() => {
+        const fetchTheaters = async () => {
+            try {
+                // API 요청 시작: 에러/로딩 상태 초기화
+                setError(null);
+                setLoading(true);
+
+                const response = await fetch('/theaters');
+                if (!response.ok) {
+                    throw new Error('상영관 정보를 불러오는 데 실패했습니다.');
+                }
+                const responseData = await response.json();
+                
+                // 목업 데이터 구조에 맞게 responseData.data 사용
+                setTheaters(responseData.data); 
+
+            } catch (e) {
+                setError(e.message);
+                console.error("Failed to fetch theaters:", e);
+            } finally {
+                // API 요청 종료: 로딩 상태 false로 변경
+                setLoading(false); 
+            }
+        };
+
+        fetchTheaters();
+    }, []); // 빈 배열을 의존성으로 전달하여 컴포넌트 마운트 시 1회만 실행
+
+    // --- 렌더링 로직 ---
+    const renderContent = () => {
+        if (loading) {
+            return <StatusText>로딩 중...</StatusText>;
+        }
+        if (error) {
+            return <StatusText>오류: {error}</StatusText>;
+        }
+        if (theaters.length === 0) {
+            return <StatusText>등록된 상영관이 없습니다.</StatusText>;
+        }
+        return (
+            <TheaterGrid>
+                {/* API로부터 받은 theaters 배열을 매핑 */}
+                {theaters.map((theater) => (
+                    // API 응답의 'number'를 key로 사용
+                    <TheaterCard key={theater.number}>
+                        <div>
+                             {/* API 응답의 'number'와 'name'을 사용 */}
+                            <TheaterName>상영관{theater.number} ({theater.name})</TheaterName>
+                            {/* API 응답의 'screenTypes'를 사용 */}
+                            <TypeInfo>제공 유형: {theater.screenTypes.join(", ")}</TypeInfo>
+                        </div>
+                         {/* API 응답의 'number'를 상세 페이지 링크에 사용 */}
+                        <DetailLink to={`/theaterDetail/${theater.number}`}>상세보기</DetailLink>
+                    </TheaterCard>
+                ))}
+            </TheaterGrid>
+        );
+    };
+
     return (
         <PageWrapper>
             <Navbar underline={true} />
@@ -27,18 +83,7 @@ const TheaterListPage = () => {
                         <FaPlus /> 상영관 등록
                     </AddButton>
                 </Header>
-                <TheaterGrid>
-                    {sampleTheaters.map((theater) => (
-                        <TheaterCard key={theater.theaterId}>
-                            <div>
-                                <TheaterName>상영관{theater.theaterId} ({theater.name}관)</TheaterName>
-                                <TypeInfo>제공 유형: {theater.types.join(", ")}</TypeInfo>
-                            </div>
-                            <DetailLink to={`/theaterDetail/${theater.theaterId}`}>상세보기</DetailLink>
-                            {/* <DetailLink to={`/theaterDetail/${theater.theaterId}`}>상세보기</DetailLink> */}
-                        </TheaterCard>
-                    ))}
-                </TheaterGrid>
+                {renderContent()}
             </Container>
         </PageWrapper>
     );
@@ -149,4 +194,12 @@ const DetailLink = styled(Link)`
   &:hover {
     background-color: #0056b3;
   }
+`;
+
+// 로딩 및 에러 메시지를 위한 스타일 컴포넌트 추가
+const StatusText = styled.div`
+    text-align: center;
+    font-size: 18px;
+    color: #868e96;
+    padding: 50px;
 `;

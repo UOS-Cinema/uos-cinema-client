@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 
 // 컴포넌트 임포트
@@ -10,13 +10,39 @@ import Step2 from '../component/reservationpage/Step2';
 import Step3 from'../component/reservationpage/Step3';
 
 function BookingPage() {
-    // 현재 예매 단계를 관리하는 state
+    // --- 예매 과정 전체 데이터 상태 관리 ---
     const [step, setStep] = useState(1);
+    const [selectedScreening, setSelectedScreening] = useState(null);
+    // Step2의 상태를 부모로 끌어올림
+    const [counts, setCounts] = useState({ adult: 0, teen: 0, senior: 0, discounted: 0 }); 
+    const [selectedSeats, setSelectedSeats] = useState([]);
 
     // 다음 단계로 이동하는 핸들러
     const handleNext = () => {
+        // 1단계 -> 2단계 유효성 검사
+        if (step === 1 && !selectedScreening) {
+            alert("상영일정을 선택해주세요.");
+            return;
+        }
+
+        // 2단계 -> 3단계 유효성 검사
+        if (step === 2) {
+            const totalPeople = Object.values(counts).reduce((sum, count) => sum + count, 0);
+            if (totalPeople === 0) {
+                alert("인원을 1명 이상 선택해주세요.");
+                return;
+            }
+            if (selectedSeats.length !== totalPeople) {
+                alert("선택하신 인원수와 좌석 수가 일치하지 않습니다.");
+                return;
+            }
+        }
+
         if (step < 3) {
             setStep((prev) => prev + 1);
+        } else {
+            // 마지막 단계에서는 결제 로직 등을 처리할 수 있습니다.
+            alert("결제를 진행합니다.");
         }
     };
 
@@ -29,16 +55,34 @@ function BookingPage() {
                     <StepIndicator step={step} />
                     <ContentWrapper>
                         <ContentArea>
-                            {step === 1 && <Step1 />}
-                            {step === 2 && <Step2 />}
-                            {step === 3 && <Step3 />}
+                            {step === 1 && (
+                                <Step1 
+                                    selectedScreening={selectedScreening}
+                                    setSelectedScreening={setSelectedScreening}
+                                />
+                            )}
+                            {step === 2 && (
+                                <Step2 
+                                    screeningId={selectedScreening?.id} 
+                                    counts={counts}
+                                    setCounts={setCounts}
+                                    selectedSeats={selectedSeats}
+                                    setSelectedSeats={setSelectedSeats}
+                                />
+                            )}
+                            {step === 3 && (
+                                <Step3
+                                    screeningInfo={selectedScreening}
+                                    personCounts={counts}
+                                    seatInfo={selectedSeats}
+                                />
+                            )}
                         </ContentArea>
                         <ButtonArea>
-                            {step < 3 && (
-                                <NextButton onClick={handleNext}>
-                                    다음 단계
-                                </NextButton>
-                            )}
+                            {/* 마지막 단계에서는 버튼 텍스트를 '결제하기' 등으로 변경 가능 */}
+                            <NextButton onClick={handleNext}>
+                                {step < 3 ? '다음 단계' : '결제하기'}
+                            </NextButton>
                         </ButtonArea>
                     </ContentWrapper>
                 </BodyContainer>

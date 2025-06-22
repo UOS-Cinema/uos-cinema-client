@@ -20,7 +20,7 @@ const AdminManagePage = () => {
 
         try {
             // 서버에 새로운 관리자 생성을 요청합니다.
-            console.log(user.accessToken);
+            console.log(user.accessToken);  
             const response = await fetch('/admins/signup', {
                 method: 'POST',
                 headers: {

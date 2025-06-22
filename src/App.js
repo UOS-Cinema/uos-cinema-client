@@ -25,6 +25,7 @@ import ActorDetailPage from "./pages/ActorDetailPage";
 import AdminManagePage from "./pages/admin/AdminManagePage";
 import MovieManagePage from "./pages/admin/MovieManagePage";
 import EditMoviePage from "./pages/admin/EditMovePAge";
+import CreateTheaterPage from "./pages/admin/CreateTheaterPage";
 function App() {
   return (
     <UserProvider>
@@ -47,6 +48,7 @@ function App() {
           <Route path="/theaterList" element={<TheaterListPage/>}/>
           <Route path="/theaterDetail/:id" element={<TheaterDetailPage/>}/>
           <Route path="/theaterEdit/:id" element={<TheaterEditPage/>}/>
+          <Route path="/theater/create" element={<CreateTheaterPage/>}/>
           <Route path="/scheduleManage" element={<ScheduleManagePage/>}/>
           <Route path="/paymentPolicy" element={<PaymentPolicyPage/>}/>
           <Route path="/createDirector" element={<CreateDirectorPage/>}/>
