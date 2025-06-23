@@ -1,59 +1,52 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 
 // 1. Context 객체 생성
-// 이 객체를 통해 Provider와 Consumer가 데이터를 공유합니다.
 export const GenreContext = createContext();
 
-// 2. Context를 사용하기 쉽게 만들어주는 커스텀 훅 (선택사항이지만 권장)
-// const { genres, loading } = useGenres(); 와 같이 편하게 사용할 수 있습니다.
+// 2. Context를 사용하기 쉽게 만들어주는 커스텀 훅
 export const useGenres = () => {
     return useContext(GenreContext);
 };
 
-// 3. Provider 컴포넌트 생성
-// 이 컴포넌트가 실질적으로 데이터를 불러오고, 하위 컴포넌트들에게 데이터를 제공(provide)합니다.
+// 3. Provider 컴포넌트
 export const GenreProvider = ({ children }) => {
     // --- 상태 관리 ---
     const [genres, setGenres] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // --- 데이터 페칭 ---
-    // 컴포넌트가 처음 마운트될 때, 장르 데이터를 API로부터 한 번만 불러옵니다.
-    useEffect(() => {
-        const fetchGenres = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                // API 엔드포인트는 실제 프로젝트에 맞게 '/genres' 등으로 설정
-                const response = await fetch('/genres'); 
-                if (!response.ok) {
-                    throw new Error('장르 정보를 불러오는 데 실패했습니다.');
-                }
-                const responseData = await response.json();
-                console.log(responseData);
-                // API 응답 데이터로 genres 상태 업데이트
-                setGenres(responseData.data || []);
-
-            } catch (err) {
-                setError(err.message);
-                console.error("Failed to fetch genres:", err);
-            } finally {
-                setLoading(false);
+    // --- 데이터 페칭 로직을 useCallback으로 감싸 재사용 가능하게 변경 ---
+    const fetchGenres = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('/genres'); 
+            if (!response.ok) {
+                throw new Error('장르 정보를 불러오는 데 실패했습니다.');
             }
-        };
+            const responseData = await response.json();
+            setGenres(responseData.data || []);
+        } catch (err) {
+            setError(err.message);
+            console.error("Failed to fetch genres:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []); // 빈 배열을 의존성으로 전달하여 함수가 재생성되지 않도록 함
 
+    // 컴포넌트가 처음 마운트될 때 데이터를 한 번 불러옵니다.
+    useEffect(() => {
         fetchGenres();
-    }, []); // 빈 배열을 전달하여 최초 1회만 실행되도록 함
+    }, [fetchGenres]); // fetchGenres 함수가 변경될 때만 실행 (최초 1회)
 
-    // Provider를 통해 전달할 값들을 객체로 묶음
+    // Provider를 통해 전달할 값에 refresh 함수를 추가합니다.
     const value = {
         genres,
         loading,
         error,
+        refresh: fetchGenres // 데이터를 다시 불러오는 함수
     };
 
-    // GenreContext.Provider로 하위 컴포넌트들을 감싸고, value를 전달
     return (
         <GenreContext.Provider value={value}>
             {children}

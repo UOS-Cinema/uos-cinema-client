@@ -10,7 +10,7 @@ import MyPage from "./pages/MyPage";
 import ScrollToTop from "./component/common/ScrollToTop";
 import SignUpPage from "./pages/SignupPage";
 import HomePage from "./pages/HomePage";
-
+import CreateActorPage from "./pages/admin/CreateActorPage";
 import TheaterListPage from "./pages/admin/TheaterListPage";
 import TheaterDetailPage from "./pages/admin/TheaterDetailPage";
 import TheaterEditPage from "./pages/admin/TheaterEditPage";
@@ -18,7 +18,7 @@ import ScheduleManagePage from "./pages/admin/ScheduleManagePage";
 import PaymentPolicyPage from "./pages/admin/PaymentPolicyPage";
 import SchedulePage from "./pages/SchedulePage";
 import CreateDirectorPage from "./pages/admin/CreateDirectorPage";
-import CreateActorPage from "./pages/admin/CreateDirectorPage";
+
 import CreateMoviePage from "./pages/admin/CreateMoviePage";
 import DirectorDetailPage from "./pages/DirectorDetailPage";
 import ActorDetailPage from "./pages/ActorDetailPage";
@@ -32,6 +32,10 @@ import { BankProvider } from "./context/BankContext";
 import { ScreenTypeProvider } from "./context/ScreenTypeContext";
 import { CustomerTypeProvider } from "./context/CustomerTypeContext";
 import { ReservationProvider } from "./context/ReservationContext";
+import CreateGenrePage from "./pages/admin/CreateGenrePage";
+import EditGenrePage from "./pages/admin/EditGenrePage";
+import EditDirectorPage from "./pages/admin/EditDirectorPage";
+import EditActorPage from "./pages/admin/EditActorPage";
 function App() {
   return (
     <UserProvider>
@@ -71,6 +75,10 @@ function App() {
                       <Route path="/createMovie" element={<CreateMoviePage />} />
                       <Route path="/adminManage" element={<AdminManagePage />} />
                       <Route path="/editMovie" element={<EditMoviePage />} />
+                      <Route path="/createGenre" element={<CreateGenrePage />} />
+                      <Route path="/editGenre" element={<EditGenrePage />} />
+                      <Route path="/editDirector" element={<EditDirectorPage/>}/>
+                      <Route path="/editActor" element={<EditActorPage/>}/>
                     </Routes>
                   </Router>
                 </ReservationProvider>

@@ -53,13 +53,15 @@ const TimeTable = ({ selectedMovie, selectedTheater, selectedDate, selectedScree
             const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
             const day = selectedDate.getDate().toString().padStart(2, '0');
             const dateString = `${year}-${month}-${day}`;
-            
+            console.log(selectedMovie);
+            console.log(selectedTheater);
             const params = new URLSearchParams({
                 // movieId는 이제 필수 파라미터가 아닐 수 있으므로, API 명세에 따라 조절
-                theaterId: selectedTheater.theaterId,
-                date: dateString,
+                movieId: selectedMovie.id,
+                theaterId: selectedTheater.number,
+                // date: dateString,
             });
-
+            console.log(params);
             try {
                 // API 엔드포인트는 /screenings/{theaterId}?date=... 와 같은 형태일 수 있습니다.
                 const response = await fetch(`/screenings?${params.toString()}`);

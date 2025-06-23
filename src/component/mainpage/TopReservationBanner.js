@@ -80,11 +80,11 @@ const ReserveButton = styled(Link)`
 function TopReservationBanner() {
   return (
     <BannerContainer>
-      <PosterImage src={topMovie.poster} alt={topMovie.title} />
+      <PosterImage src="https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20250512_149%2F1747012921958HDq8h_JPEG%2Fmovie_image.jpg" alt={topMovie.title} />
       <BannerContent>
-        <Title>{topMovie.title}</Title>
-        <Rate>예매율: {topMovie.reservation_rate}%</Rate>
-        <ReserveButton to={`/reservation?movie=${topMovie.id}`}>
+        <Title>드래곤길들이기</Title>
+        <Rate>예매 185000회</Rate>
+        <ReserveButton to={`/reservation?movie=1`}>
           바로 예매하기
         </ReserveButton>
       </BannerContent>

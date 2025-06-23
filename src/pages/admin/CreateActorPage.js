@@ -1,34 +1,49 @@
-// pages/admin/CreateActorPage.js
-
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import styled, { createGlobalStyle } from "styled-components";
-import Navbar from "../../component/common/NavBar"; // 경로 확인 필요
-import { FaUserPlus, FaCamera } from "react-icons/fa";
+import Navbar from "../../component/common/NavBar";
+import { FaUserPlus } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../../context/UserContext";
 
 const CreateActorPage = () => {
+    const { user } = useContext(UserContext);
+    const navigate = useNavigate();
     const [name, setName] = useState("");
-    const [profileImage, setProfileImage] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(null);
+    const [photoUrl, setPhotoUrl] = useState("");
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setProfileImage(file);
-            setPreviewUrl(URL.createObjectURL(file));
-        }
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!name || !profileImage) {
-            alert("이름과 프로필 사진을 모두 입력해주세요.");
+        if (!name.trim()) {
+            alert("배우 이름을 입력해주세요.");
             return;
         }
-        alert(`배우 '${name}' 생성 완료!`);
-        // Reset form
-        setName("");
-        setProfileImage(null);
-        setPreviewUrl(null);
+
+        const payload = {
+            name: name,
+            photoUrl: photoUrl || null,
+        };
+
+        try {
+            const response = await fetch('/admin/actors', { // 엔드포인트 수정
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.accessToken}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert(`배우 '${name}' 정보가 성공적으로 등록되었습니다.`);
+                navigate('/movieManage');
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "배우 등록에 실패했습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to create actor:", err);
+            alert(err.message);
+        }
     };
 
     return (
@@ -37,19 +52,21 @@ const CreateActorPage = () => {
             <Navbar underline={true} />
             <FormContainer onSubmit={handleSubmit}>
                 <Title>배우 등록</Title>
-                <ProfileUploader htmlFor="profile-upload">
-                    {previewUrl ? <ImagePreview src={previewUrl} alt="미리보기" /> : <FaCamera />}
-                </ProfileUploader>
-                <Input 
-                    type="file" 
-                    id="profile-upload" 
-                    accept="image/*" 
-                    onChange={handleFileChange} 
-                    style={{display: 'none'}} 
-                />
                 
-                <Label>이름</Label>
+                <ImagePreview src={photoUrl || 'https://placehold.co/150x150/e9ecef/adb5bd?text=Image'} alt="배우 사진" />
+
+                <Label htmlFor="actor-photo-url">프로필 사진 URL</Label>
                 <Input
+                    id="actor-photo-url"
+                    type="text"
+                    value={photoUrl}
+                    onChange={(e) => setPhotoUrl(e.target.value)}
+                    placeholder="이미지 URL을 입력하세요"
+                />
+
+                <Label htmlFor="actor-name">이름</Label>
+                <Input
+                    id="actor-name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -64,10 +81,7 @@ const CreateActorPage = () => {
 
 export default CreateActorPage;
 
-
 // --- STYLED COMPONENTS ---
-// 이 스타일은 CreateDirectorPage.js에서도 재사용될 수 있습니다.
-
 const primaryBlue = '#1E6DFF';
 const darkGray = '#343a40';
 const mediumGray = '#dee2e6';
@@ -96,29 +110,13 @@ const Title = styled.h2`
     color: ${darkGray};
 `;
 
-const ProfileUploader = styled.label`
+const ImagePreview = styled.img`
     width: 150px;
     height: 150px;
     border-radius: 50%;
-    border: 3px dashed ${mediumGray};
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    background-color: ${lightGray};
-    margin-bottom: 30px;
-    overflow: hidden;
-
-    svg {
-        font-size: 40px;
-        color: ${mediumGray};
-    }
-`;
-
-const ImagePreview = styled.img`
-    width: 100%;
-    height: 100%;
     object-fit: cover;
+    margin-bottom: 20px;
+    border: 3px solid ${mediumGray};
 `;
 
 const Label = styled.label`
@@ -159,30 +157,9 @@ const SubmitButton = styled.button`
     font-size: 18px;
     font-weight: 700;
     cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background-color: #0056b3;
+    }
 `;
-
-// ==========================================================
-// pages/admin/CreateDirectorPage.js
-// CreateActorPage.js와 거의 동일하므로, 컴포넌트를 재사용하거나 복사하여 사용하세요.
-// 아래는 CreateDirectorPage의 예시입니다.
-
-/*
-import React, { useState } from "react";
-// 위에서 정의한 동일한 styled-components를 import하여 사용합니다.
-// import { FormContainer, Title, ... } from './CreateActorPageStyles'; 
-
-const CreateDirectorPage = () => {
-    // 로직은 CreateActorPage와 동일
-    return (
-        <>
-            <GlobalStyle />
-            <Navbar underline={true} />
-            <FormContainer>
-                <Title>감독 등록</Title>
-                // ... 나머지 폼 요소들
-            </FormContainer>
-        </>
-    )
-}
-export default CreateDirectorPage;
-*/

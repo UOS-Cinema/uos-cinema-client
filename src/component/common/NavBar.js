@@ -222,7 +222,7 @@ const Navbar = ({ underline }) => {
                 <StyledLink to="/adminManage">어드민 관리</StyledLink>
               </li>
               <li>
-                <StyledLink to="/movieManage">영화/배우/감독 관리</StyledLink>
+                <StyledLink to="/movieManage">영화/감독/배우/장르 관리</StyledLink>
               </li>
               <li>
                 <StyledLink to="/theaterList">상영관 관리</StyledLink>

@@ -9,14 +9,19 @@ const MovieGrid = ({ results }) => {
         // 부모 컴포넌트에서 이미 이 경우를 처리하지만, 안전장치로 추가
         return <StatusText>조회된 영화가 없습니다.</StatusText>;
     }
-
+    else{
+      console.log(results);
+    }
+    
     return (
         <Grid>
             {results.map((movie) => (
                 <MovieCard key={movie.id}>
                     <PosterContainer>
                         {/* API 응답 키에 맞춰 posterUrl로 변경될 수 있음 */}
-                        <Poster src={movie.posterUrl || movie.poster} alt={movie.title} />
+                        <Poster src={movie.posterUrls[0]} alt={movie.title} />
+                        {/* <Poster src="https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20250514_116%2F17471898410878x4Ud_JPEG%2Fmovie_image.jpg"/> */}
+                        
                         <HoverOverlay>
                             <ButtonGroup>
                                 <ActionButton as={Link} to={`/movie/${movie.id}`} className="secondary">상세보기</ActionButton>
@@ -27,7 +32,7 @@ const MovieGrid = ({ results }) => {
                     <Info>
                         <h3>{movie.title}</h3>
                         {/* API 응답 키에 맞춰 reservationRate로 변경될 수 있음 */}
-                        <p>예매율 {movie.reservationRate?.toFixed(1) || movie.reservation_rate}%</p>
+                        <p>예매수{movie.cumulativeBookings}</p>
                     </Info>
                 </MovieCard>
             ))}
@@ -103,11 +108,12 @@ const PosterContainer = styled.div`
 `;
 
 const Poster = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  background-color: #f1f3f5; /* 이미지가 없을 경우를 대비한 배경색 */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  
 `;
 
 const Info = styled.div`
