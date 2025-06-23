@@ -22,6 +22,7 @@ const MainContent = styled.main`
 const MainPage = () => {
     const { user } = useContext(UserContext); // 필요 시 사용
     console.log(user);
+
     return (
         <MainPageContainer>
             <Navbar underline={true} />
