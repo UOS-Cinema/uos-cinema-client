@@ -1,33 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useReservationState, useReservationDispatch } from '../../context/ReservationContext'; // Context 훅 임포트
+import { useReservationState, useReservationDispatch } from '../../context/ReservationContext';
 
-// 영화 목업 데이터
-const sampleMovies = [
-    { id: 1, title: "야당", runningTime: 135, ageRating: "15" },
-    { id: 2, title: "승부", runningTime: 120, ageRating: "12" },
-    { id: 3, title: "바이러스", runningTime: 110, ageRating: "All" },
-    { id: 4, title: "플로우즈", runningTime: 95, ageRating: "15" },
-    { id: 5, title: "파과", runningTime: 140, ageRating: "18" },
-    { id: 6, title: "거룩한 밤", runningTime: 125, ageRating: "18" },
-];
+// --- 추가된 부분: 등급 아이콘 표시를 위한 헬퍼 함수 및 스타일 ---
+// 등급 표시 텍스트 변환 함수
+const getRatingDisplay = (rating) => {
+    switch (rating) {
+        case 'ALL':
+        case 'All':
+        case '전체 관람가':
+            return 'All';
+        case 'TWELVE':
+        case '12':
+        case '12세 이상 관람가':
+            return '12';
+        case 'FIFTEEN':
+        case '15':
+        case '15세 이상 관람가':
+            return '15';
+        case 'NINETEEN':
+        case '18':
+        case '청소년 관람불가':
+            return '19';
+        default:
+            return 'All';
+    }
+};
+// 등급 아이콘 스타일 컴포넌트
+const AgeRating = styled.span`
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    background-color: ${({ rating }) => {
+        switch (rating) {
+            case 'ALL':
+            case 'All':
+            case '전체 관람가':
+                return '#57a773'; // 초록색
+            case 'TWELVE':
+            case '12':
+            case '12세 이상 관람가':
+                return '#4aa7c6'; // 파란색
+            case 'FIFTEEN':
+            case '15':
+            case '15세 이상 관람가':
+                return '#e6b345'; // 노란색
+            case 'NINETEEN':
+            case '18':
+            case '청소년 관람불가':
+                return '#d94b4b'; // 빨간색
+            default:
+                return '#868e96'; // 회색
+        }
+    }};
+`;
 
-// props를 받지 않도록 시그니처 수정
+
 const Step1 = () => {
-    // --- Context에서 상태와 dispatch 함수 가져오기 ---
     const { selectedScreening } = useReservationState();
     const dispatch = useReservationDispatch();
 
-    // --- Step1 내부에서만 사용할 로컬 상태 관리 ---
-    const [movies] = useState(sampleMovies); 
-    const [selectedMovie, setSelectedMovie] = useState(movies[0]); 
+    const [movies, setMovies] = useState([]);
+    const [selectedMovie, setSelectedMovie] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date()); 
-    
     const [groupedScreenings, setGroupedScreenings] = useState({}); 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // --- 날짜 관련 로직 ---
     const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
     const [dateRange, setDateRange] = useState([]);
 
@@ -54,7 +100,29 @@ const Step1 = () => {
         }));
     };
     
-    // --- API 연동 로직 ---
+    useEffect(() => {
+        const fetchMovies = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetch('/movies/ranking?page=0&size=8');
+                if (!response.ok) throw new Error('영화 목록을 불러오는 데 실패했습니다.');
+                const responseData = await response.json();
+                const fetchedMovies = responseData.data?.content || [];
+                setMovies(fetchedMovies);
+                console.log(responseData.data.content);
+                if (fetchedMovies.length > 0) {
+                    setSelectedMovie(fetchedMovies[0]);
+                }
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMovies();
+    }, []);
+
     useEffect(() => {
         if (!selectedMovie || !selectedDate) return;
 
@@ -62,11 +130,8 @@ const Step1 = () => {
             setLoading(true);
             setError(null);
             setGroupedScreenings({}); 
-            
-            // 영화나 날짜가 변경되면, Context의 선택 상태를 초기화
             dispatch({ type: 'SELECT_SCREENING', payload: null });
             dispatch({ type: 'RESET_SELECTION' });
-
 
             const dateString = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
             const params = new URLSearchParams({ movieId: selectedMovie.id, date: dateString });
@@ -74,10 +139,9 @@ const Step1 = () => {
             try {
                 const response = await fetch(`/screenings?${params.toString()}`);
                 if (!response.ok) throw new Error('상영 정보를 불러오는 데 실패했습니다.');
-
                 const responseData = await response.json();
-
-                const screeningsByGroup = responseData.data.reduce((acc, screening) => {
+                console.log(responseData.data);
+                const screeningsByGroup = (responseData.data || []).reduce((acc, screening) => {
                     const key = `${screening.theaterId}-${screening.screenType}`;
                     if (!acc[key]) {
                         acc[key] = {
@@ -97,7 +161,7 @@ const Step1 = () => {
                 }, {});
                 
                 setGroupedScreenings(screeningsByGroup);
-
+                console.log(screeningsByGroup);
             } catch (err) {
                 setError(err.message);
                 console.error(err);
@@ -109,7 +173,6 @@ const Step1 = () => {
         fetchScreenings();
     }, [selectedMovie, selectedDate, dispatch]);
 
-    // 시간 클릭 시, Context의 상태를 업데이트하는 핸들러
     const handleTimeSelect = (screeningTime, group) => {
         const fullScreeningInfo = {
             ...screeningTime,
@@ -117,10 +180,9 @@ const Step1 = () => {
             theaterName: group.theaterName,
             screenType: group.screenType,
             movieTitle: selectedMovie.title,
-            ageRating: selectedMovie.ageRating,
+            rating: selectedMovie.rating,
             fullDate: selectedDate,
         };
-        // dispatch를 사용하여 전역 상태 업데이트
         dispatch({ type: 'SELECT_SCREENING', payload: fullScreeningInfo });
     };
 
@@ -128,16 +190,19 @@ const Step1 = () => {
         <Step1Container>
             <MovieSelection>
                 <SectionTitle>영화 선택</SectionTitle>
-                {movies.map((movie) => (
-                    <MovieItem
-                        key={movie.id}
-                        active={selectedMovie?.id === movie.id}
-                        onClick={() => setSelectedMovie(movie)}
-                    >
-                        <StyledImg src={`https://placehold.co/24x24/E8A2A2/FFFFFF?text=${movie.ageRating}`} alt={`${movie.ageRating}세 이용가`} />
-                        {movie.title}
-                    </MovieItem>
-                ))}
+                {loading && movies.length === 0 ? <PlaceholderText>영화를 불러오는 중...</PlaceholderText> :
+                    movies.map((movie) => (
+                        <MovieItem
+                            key={movie.id}
+                            active={selectedMovie?.id === movie.id}
+                            onClick={() => setSelectedMovie(movie)}
+                        >
+                            {/* StyledImg 대신 rating 컴포넌트 사용 */}
+                            <AgeRating rating={movie.rating}>{getRatingDisplay(movie.rating)}</AgeRating>
+                            {movie.title}
+                        </MovieItem>
+                    ))
+                }
             </MovieSelection>
 
             <TimeSelection>
@@ -168,8 +233,9 @@ const Step1 = () => {
                         Object.values(groupedScreenings).map(group => (
                             <MovieItemWithTime key={`${group.theaterId}-${group.screenType}`}>
                                 <MovieTitleWithTime>
-                                    <StyledImg src={`https://placehold.co/24x24/E8A2A2/FFFFFF?text=${selectedMovie.ageRating}`} alt={`${selectedMovie.ageRating}세 이용가`} />
-                                    {selectedMovie.title}
+                                    {/* StyledImg 대신 rating 컴포넌트 사용 */}
+                                    <AgeRating rating={getRatingDisplay(selectedMovie?.rating)}>{getRatingDisplay(selectedMovie?.rating)}</AgeRating>
+                                    {selectedMovie?.title}
                                 </MovieTitleWithTime>
                                 <Theater>{group.theaterName} • {group.screenType}</Theater>
                                 <TimeList>
@@ -245,12 +311,7 @@ const MovieItem = styled.div`
     border-right-color: #66A3F2;
   }
 `;
-const StyledImg = styled.img`
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  flex-shrink: 0;
-`;
+// StyledImg는 더 이상 사용되지 않으므로 제거 가능합니다.
 const TimeSelection = styled.div`
   display: flex;
   flex-direction: column;
@@ -376,7 +437,6 @@ const TimeItem = styled.div`
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.3s ease;
-
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -407,4 +467,9 @@ const Placeholder = styled.div`
     background: #fff;
     border-radius: 12px;
     min-height: 200px;
+`;
+const PlaceholderText = styled.div`
+    padding: 20px;
+    text-align: center;
+    color: #868e96;
 `;

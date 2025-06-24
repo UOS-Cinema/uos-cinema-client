@@ -66,7 +66,7 @@ const EditDirectorPage = () => {
 
     const fetchDirectors = async () => {
         try {
-            const response = await fetch('/directors');
+            const response = await fetch('/directors?page=0&size=100');
             const data = await response.json();
             setDirectors(data.data?.content || []);
         } catch (error) {

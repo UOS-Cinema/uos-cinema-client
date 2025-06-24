@@ -25,7 +25,7 @@ const ScheduleManagePage = () => {
             setError(null);
             try {
                 const [moviesResponse, theatersResponse] = await Promise.all([
-                    fetch('/movies/ranking?page=0&size=4'),
+                    fetch('/movies/ranking?size=100'),
                     fetch('/theaters')
                 ]);
 
@@ -59,8 +59,6 @@ const ScheduleManagePage = () => {
         fetchData();
     }, []);
 
-    // --- !! 수정된 부분 !! ---
-    // 상영관이 변경될 때만 이 효과가 실행되도록 하여, 불필요한 재실행을 방지하고 상태를 안정화합니다.
     useEffect(() => {
         if (selectedTheater && selectedTheater.screenTypes?.length > 0) {
             setSelectedScreenType(selectedTheater.screenTypes[0]);
@@ -86,6 +84,22 @@ const ScheduleManagePage = () => {
         });
     }, [currentDate]);
 
+    // --- !! 수정된 부분: 등급 텍스트 변환 함수 !! ---
+    const getRatingDisplay = (rating) => {
+        switch (rating) {
+            case '전체 관람가':
+                return 'All';
+            case '12세 이상 관람가':
+                return '12';
+            case '15세 이상 관람가':
+                return '15';
+            case '청소년 관람불가': // 18세 이상 관람가와 동일하게 처리
+                return '19';
+            default:
+                return 'All';
+        }
+    };
+
     if (loading) return <StatusText>데이터를 불러오는 중...</StatusText>;
     if (error) return <StatusText error>{error}</StatusText>;
 
@@ -100,7 +114,7 @@ const ScheduleManagePage = () => {
                         <LeftPanel>
                             {movies.map((movie) => (
                                 <MovieItem key={movie.id} active={selectedMovie?.id === movie.id} onClick={() => setSelectedMovie(movie)}>
-                                    <AgeRating rating={movie.rating}>{movie.rating}</AgeRating>
+                                    <AgeRating rating={movie.rating}>{getRatingDisplay(movie.rating)}</AgeRating>
                                     {movie.title}
                                 </MovieItem>
                             ))}
@@ -201,23 +215,29 @@ const Panel = styled.div`
 const LeftPanel = styled(Panel)``;
 const MiddlePanel = styled(Panel)``;
 const RightPanel = styled(Panel)``;
+
+// --- !! 수정된 부분: 등급 아이콘 스타일링 !! ---
 const AgeRating = styled.span`
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: auto;
-    min-width: 28px;
+    width: 28px;
     height: 28px;
-    padding: 0 4px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: white;
-    background-color: ${({ rating }) =>
-        rating === "ALL" ? '#57a773' :
-        rating === "TWELVE" ? '#4aa7c6' :
-        rating === "FIFTEEN" ? '#e6b345' : '#d94b4b'};
+    background-color: ${({ rating }) => {
+        switch (rating) {
+            case '전체 관람가': return '#57a773';
+            case '12세 이상 관람가': return '#4aa7c6';
+            case '15세 이상 관람가': return '#e6b345';
+            case '청소년 관람불가': return '#d94b4b';
+            default: return '#868e96'; // 알 수 없는 값일 경우 회색
+        }
+    }};
 `;
+
 const MovieItem = styled.div`
   display: flex;
   align-items: center;

@@ -65,7 +65,7 @@ const EditActorPage = () => {
 
     const fetchActors = async () => {
         try {
-            const response = await fetch('/actors');
+            const response = await fetch('/actors?page=0&size=100');
             const data = await response.json();
             setActors(data.data?.content || []);
         } catch (error) {

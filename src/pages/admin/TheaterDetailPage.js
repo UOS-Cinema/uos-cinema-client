@@ -78,7 +78,7 @@ const TheaterDetailPage = () => {
       <Container>
         <InfoHeader>
           <div>
-            <Title>상영관{theater.number} ({theater.name}관)</Title>
+            <Title>상영관{theater.number} ({theater.name})</Title>
             <Info>제공 유형: {theater.screenTypes.join(", ")}</Info>
           </div>
           <EditLink to={`/theaterEdit/${theater.number}`}><FaPencilAlt /> 수정하기</EditLink>

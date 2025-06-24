@@ -125,7 +125,7 @@ const FilterBar = () => {
 // --- MovieGrid 컴포넌트 ---
 const MovieGrid = ({ results }) => {
     const getPosterUrl = (movie) => {
-        const urls = movie.posterUrls;
+        const urls = movie.posterUrl;
         if (Array.isArray(urls) && urls.length > 0) {
             try {
                 const parsed = JSON.parse(urls[0]);
@@ -199,6 +199,7 @@ const MovieTabSection = () => {
                     throw new Error(`${activeTab === 'chart' ? '랭킹' : '상영예정작'} 정보를 불러오는데 실패했습니다.`);
                 }
                 const responseData = await response.json();
+                console.log(responseData);
                 setMovieList(responseData.data?.content || []);
             } catch (err) {
                 setError(err.message);

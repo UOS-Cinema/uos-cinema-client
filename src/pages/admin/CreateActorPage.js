@@ -22,7 +22,7 @@ const CreateActorPage = () => {
             name: name,
             photoUrl: photoUrl || null,
         };
-
+        console.log(payload);
         try {
             const response = await fetch('/admin/actors', { // 엔드포인트 수정
                 method: 'POST',

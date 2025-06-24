@@ -61,12 +61,14 @@ const Step2 = () => {
             }
 
             try {
-                const response = await fetch(`/screenings/${screeningId}`, {
+                // --- !! 수정된 부분: API 엔드포인트 변경 !! ---
+                const response = await fetch(`/screenings/${screeningId}/reservations`, {
                     headers: { 'Authorization': `Bearer ${user.accessToken}` },
                 });
                 if (!response.ok) throw new Error("좌석 정보를 불러오는 데 실패했습니다.");
                 
                 const responseData = await response.json();
+                console.log(responseData.data);
                 setScreeningDetails(responseData.data);
                 setSeatLayout(responseData.data.seatingStatus);
             } catch (err) {
@@ -114,8 +116,6 @@ const Step2 = () => {
         }
     };
     
-    // --- handleSeatClick 수정 ---
-    // 이제 (x, y) 좌표 대신 정확한 seatId를 직접 받습니다.
     const handleSeatClick = (seatId, seatType) => {
         if (seatType !== 'SEAT') return;
         
@@ -171,7 +171,7 @@ const Step2 = () => {
                         <SeatSelectionArea>
                             <SeatContainer>
                                 {seatLayout.map((row, y) => {
-                                    let seatNumber = 1; // 보이는 좌석 번호 카운터
+                                    let seatNumber = 1;
                                     return (
                                         <SeatRow key={y}>
                                             <RowLabel>{String.fromCharCode(65 + y)}</RowLabel>
@@ -179,23 +179,13 @@ const Step2 = () => {
                                                 if (seatType === "AISLE" || seatType === "NONE") {
                                                     return <Aisle key={`${y}-${x}`} />;
                                                 }
-
-                                                // --- 올바른 seatId 생성 ---
-                                                // 보이는 좌석 번호를 사용해 ID 생성 (예: 'A1', 'A2', ...)
                                                 const seatId = `${String.fromCharCode(65 + y)}${seatNumber}`;
                                                 const isSelected = selectedSeats.includes(seatId);
                                                 const isDisabled = seatType !== 'SEAT';
                                                 const currentSeatNumber = seatNumber++;
 
                                                 return (
-                                                    <SeatBox
-                                                        key={seatId}
-                                                        isSelected={isSelected}
-                                                        disabled={isDisabled}
-                                                        // --- onClick 핸들러 수정 ---
-                                                        // 이제 좌표(x,y) 대신 생성된 seatId와 seatType을 직접 전달
-                                                        onClick={() => handleSeatClick(seatId, seatType)}
-                                                    >
+                                                    <SeatBox key={seatId} isSelected={isSelected} disabled={isDisabled} onClick={() => handleSeatClick(seatId, seatType)}>
                                                         <SeatNumber isSelected={isSelected}>{currentSeatNumber}</SeatNumber>
                                                     </SeatBox>
                                                 );
@@ -215,7 +205,6 @@ const Step2 = () => {
 export default Step2;
 
 // --- STYLED COMPONENTS ---
-
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

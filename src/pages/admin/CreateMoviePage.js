@@ -140,6 +140,7 @@ const CreateMoviePage = () => {
         e.preventDefault();
         
         if (!selectedDirector) return alert("감독을 선택해주세요.");
+        console.log(cast);
         if (cast.some(c => !c.actor || !c.role)) return alert("출연진 정보를 모두 입력해주세요.");
 
         const payload = {

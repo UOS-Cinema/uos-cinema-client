@@ -1,38 +1,70 @@
-import React, { useState, useMemo, useContext } from 'react';
+import React, { useState, useMemo, useEffect, useContext } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaRegCreditCard, FaMoneyBillTransfer, FaPiggyBank } from "react-icons/fa6";
+import { FaRegCreditCard, FaMoneyBillTransfer } from "react-icons/fa6"; // FaPiggyBank 아이콘 제거
 import { useReservationState } from '../../context/ReservationContext';
 import { useCustomerTypes } from '../../context/CustomerTypeContext';
 import { useScreenTypes } from '../../context/ScreenTypeContext';
 import { useCardCompanies } from '../../context/CardCompanyContext';
 import { useBanks } from '../../context/BankContext';
+import { UserContext } from '../../context/UserContext';
 
-// 목업 데이터 (요청에 따라 유지)
-const MOCK_DATA = {
-    availablePoints: 5000,
-};
-const paymentMethods = {
-    saved: [
-        { id: 'saved-card-1', name: '신한카드(1234)' },
-        { id: 'saved-account-1', name: '우리은행(5678)' },
-    ]
+// 고객 유형 영문 -> 한글 변환 헬퍼
+const translateCustomerType = (type) => {
+    switch (type) {
+        case 'ADULT': return '성인';
+        case 'TEEN': return '청소년';
+        case 'CHILD': return '어린이';
+        case 'SENIOR': return '경로';
+        case 'ELDERLY': return '경로';
+        case 'DISCOUNTED': return '우대';
+        default: return type;
+    }
 };
 
 const Step3 = () => {
-    // Context에서 데이터 가져오기
+    // --- Context에서 데이터 가져오기 ---
+    const { user } = useContext(UserContext);
     const { screenType, counts } = useReservationState();
     const { customerTypes } = useCustomerTypes();
     const { screenTypes } = useScreenTypes();
     const { cardCompanies } = useCardCompanies();
     const { banks } = useBanks();
 
-    // 로컬 상태 관리
+    // --- 로컬 상태 관리 ---
     const [selectedTab, setSelectedTab] = useState("card");
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [usedPoints, setUsedPoints] = useState(0);
     const [paymentDiscount, setPaymentDiscount] = useState(0);
+    const [availablePoints, setAvailablePoints] = useState(0); // 포인트 상태 추가
+    const [pointsLoading, setPointsLoading] = useState(true);
 
-    // 가격 및 할인 계산
+    // --- 포인트 정보 API 페칭 ---
+    useEffect(() => {
+        if (!user?.accessToken) {
+            setPointsLoading(false);
+            return;
+        }
+
+        const fetchUserPoints = async () => {
+            setPointsLoading(true);
+            try {
+                const response = await fetch('/members/points', {
+                    headers: { 'Authorization': `Bearer ${user.accessToken}` },
+                });
+                if (!response.ok) throw new Error('포인트 정보를 불러오지 못했습니다.');
+                const responseData = await response.json();
+                setAvailablePoints(responseData.data?.points || 0);
+            } catch (err) {
+                console.error("Failed to fetch points:", err);
+            } finally {
+                setPointsLoading(false);
+            }
+        };
+
+        fetchUserPoints();
+    }, [user]);
+
+    // --- 가격 및 할인 계산 ---
     const originalPrice = useMemo(() => {
         const screenTypeData = screenTypes.find(st => st.type === screenType);
         const basePrice = screenTypeData?.price || 0;
@@ -51,12 +83,12 @@ const Step3 = () => {
         return priceAfterPoints > 0 ? priceAfterPoints : 0;
     }, [originalPrice, paymentDiscount, usedPoints]);
     
-    // 핸들러 함수
+    // --- 핸들러 함수 ---
     const handlePointChange = (e) => {
         let value = parseInt(e.target.value, 10) || 0;
         const maxPoints = originalPrice - paymentDiscount;
         if (value < 0) value = 0;
-        if (value > MOCK_DATA.availablePoints) value = MOCK_DATA.availablePoints;
+        if (value > availablePoints) value = availablePoints; // API로 받은 포인트로 제한
         if (value > maxPoints) value = maxPoints;
         setUsedPoints(value);
     };
@@ -84,11 +116,12 @@ const Step3 = () => {
                                 placeholder="0" 
                                 value={usedPoints === 0 ? '' : usedPoints}
                                 onChange={handlePointChange}
+                                disabled={pointsLoading} // 로딩 중 비활성화
                              />
                             <span>P</span>
                         </InputWrapper>
                         <AvailablePoints>
-                            사용 가능: {MOCK_DATA.availablePoints.toLocaleString()} P
+                            {pointsLoading ? "조회 중..." : `사용 가능: ${availablePoints.toLocaleString()} P`}
                         </AvailablePoints>
                     </PointContainer>
                 </SectionBox>
@@ -99,7 +132,7 @@ const Step3 = () => {
                         <TabList>
                             <TabButton isSelected={selectedTab === "card"} onClick={() => handleTabChange("card")}>카드결제</TabButton>
                             <TabButton isSelected={selectedTab === "transfer"} onClick={() => handleTabChange("transfer")}>계좌이체</TabButton>
-                            <TabButton isSelected={selectedTab === "saved"} onClick={() => handleTabChange("saved")}>등록된 결제수단</TabButton>
+                            {/* 등록된 결제수단 탭 제거 */}
                         </TabList>
                         <TabContent>
                             {selectedTab === 'card' && cardCompanies.map(p => (
@@ -121,12 +154,7 @@ const Step3 = () => {
                                      </div>
                                 </AccountInfo>
                             ))}
-                            {selectedTab === 'saved' && paymentMethods.saved.map(p => (
-                                <PaymentItem key={p.id} isSelected={selectedPayment?.id === p.id} onClick={() => handlePaymentSelect(p)}>
-                                    <FaPiggyBank />
-                                    <PaymentName>{p.name}</PaymentName>
-                                </PaymentItem>
-                            ))}
+                            {/* 등록된 결제수단 렌더링 로직 제거 */}
                         </TabContent>
                      </PaymentContainer>
                 </SectionBox>
@@ -261,15 +289,12 @@ const TabButton = styled.button`
     background-color: #f1f3f5;
   }
 `;
-
-// --- !! 여기가 수정된 부분입니다 !! ---
 const TabContent = styled.div`
   padding: 24px;
-  padding-right: 16px; /* 스크롤바 공간 확보 */
-  max-height: 250px; /* 스크롤이 생길 최대 높이 지정 */
-  overflow-y: auto; /* 내용이 넘칠 경우 세로 스크롤 자동 생성 */
-min-height:250px;
-  /* 스크롤바 디자인 (선택사항) */
+  padding-right: 16px;
+  max-height: 250px;
+  overflow-y: auto;
+  min-height:250px;
   &::-webkit-scrollbar {
     width: 8px;
   }
@@ -281,7 +306,6 @@ min-height:250px;
     background-color: transparent;
   }
 `;
-
 const PaymentItem = styled.div`
   display: flex;
   align-items: center;

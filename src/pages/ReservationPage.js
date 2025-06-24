@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
 
 // 컴포넌트 임포트
@@ -7,23 +7,31 @@ import Navbar from '../component/common/NavBar';
 import StepIndicator from '../component/reservationpage/StepIndicator';
 import Step1 from '../component/reservationpage/Step1';
 import Step2 from '../component/reservationpage/Step2';
-import Step3 from'../component/reservationpage/Step3';
+import Step3 from '../component/reservationpage/Step3';
 import { useReservationState } from '../context/ReservationContext';
+import { UserContext } from '../context/UserContext'; // UserContext 추가
 
 function BookingPage() {
-    // 1. step 상태를 BookingPage에서 직접 관리
+    // --- 상태 관리 ---
     const [step, setStep] = useState(1);
-
-    // 2. Context에서는 예매 데이터만 가져옴
+    // Context에서 예매 데이터 가져오기
     const { selectedScreening, counts, selectedSeats } = useReservationState();
-    
-    // handleNext 함수는 이제 Context의 dispatch가 아닌 로컬 setStep을 사용
-    const handleNext = () => {
-        if (step === 1 && !selectedScreening) {
-            alert("상영일정을 선택해주세요.");
-            return;
+    // Context에서 사용자 인증 정보 가져오기
+    const { user } = useContext(UserContext);
+    // 생성된 예약 정보를 저장할 상태
+    const [reservationInfo, setReservationInfo] = useState(null);
+
+    // --- 다음 단계 이동 핸들러 (API 연동 로직 추가) ---
+    const handleNext = async () => {
+        // 1단계 -> 2단계 유효성 검사
+        if (step === 1) {
+            if (!selectedScreening) {
+                alert("상영일정을 선택해주세요.");
+                return;
+            }
         }
 
+        // 2단계 -> 3단계 유효성 검사 및 API 호출
         if (step === 2) {
             const totalPeople = Object.values(counts).reduce((s, c) => s + c, 0);
             if (totalPeople === 0) {
@@ -34,13 +42,50 @@ function BookingPage() {
                 alert("선택하신 인원수와 좌석 수가 일치하지 않습니다.");
                 return;
             }
+            if (!user?.accessToken) {
+                alert("로그인이 필요합니다.");
+                return;
+            }
+
+            // API 요청 본문(payload) 생성
+            const payload = {
+                screeningId: selectedScreening.id,
+                theaterId: selectedScreening.theaterId,
+                seatNumbers: selectedSeats,
+                customerCount: counts
+            };
+            console.log(payload);
+            try {
+                const response = await fetch('/reservations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.accessToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || '예약 생성에 실패했습니다.');
+                }
+
+                const responseData = await response.json();
+                setReservationInfo(responseData.data); // 서버로부터 받은 예약 정보 저장
+
+            } catch (err) {
+                alert(err.message);
+                console.error("Reservation failed:", err);
+                return; // 에러 발생 시 다음 단계로 진행하지 않음
+            }
         }
 
         if (step < 3) {
-            // 3. dispatch 대신 setStep으로 상태 변경
             setStep((prev) => prev + 1);
         } else {
+            // 마지막 단계에서는 결제 로직을 처리
             alert("결제를 진행합니다.");
+            // 여기서 결제 API 호출 로직을 추가할 수 있습니다.
         }
     };
 
@@ -50,19 +95,21 @@ function BookingPage() {
             <AppContainer>
                 <Navbar underline={true} />
                 <BodyContainer>
-                    {/* 로컬 step 상태를 StepIndicator에 전달 */}
                     <StepIndicator step={step} />
                     <ContentWrapper>
                         <ContentArea>
-                            {/* 로컬 step 상태에 따라 컴포넌트를 조건부 렌더링 */}
                             {step === 1 && <Step1 />}
                             {step === 2 && <Step2 />}
-                            {step === 3 && <Step3 />}
+                            {step === 3 && <Step3 reservationInfo={reservationInfo} />}
                         </ContentArea>
                         <ButtonArea>
-                            <NextButton onClick={handleNext}>
-                                {step < 3 ? '다음 단계' : '결제하기'}
-                            </NextButton>
+                            {step < 3 &&
+                                <NextButton onClick={handleNext}>
+                                    {step < 3 ? '다음 단계' : '결제하기'}
+                                </NextButton>
+
+                            }
+
                         </ButtonArea>
                     </ContentWrapper>
                 </BodyContainer>

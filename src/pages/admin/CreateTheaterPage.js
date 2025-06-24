@@ -1,9 +1,10 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import styled, { createGlobalStyle } from "styled-components";
 import Navbar from "../../component/common/NavBar";
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
+import { useScreenTypes } from "../../context/ScreenTypeContext";
 
 // 기본 레이아웃을 생성하는 헬퍼 함수
 const createDefaultLayout = (rows, cols) => {
@@ -15,9 +16,10 @@ const createDefaultLayout = (rows, cols) => {
 const CreateTheaterPage = () => {
     const navigate = useNavigate();
     const { user } = useContext(UserContext);
+    const { screenTypes: allScreenTypes, loading: screenTypesLoading } = useScreenTypes();
 
-    // --- 상태 초기화 (등록 페이지에 맞게 수정) ---
-    const [number, setNumber] = useState(""); // 상영관 번호 상태 추가
+    // --- 상태 초기화 ---
+    const [number, setNumber] = useState("");
     const [name, setName] = useState("");
     const [selectedTypes, setSelectedTypes] = useState([]);
     
@@ -29,38 +31,34 @@ const CreateTheaterPage = () => {
     
     const [mode, setMode] = useState("SEAT"); 
 
-    const allScreenTypes = ["2D", "3D", "4D"];
-
-    // 제공 유형 선택/해제
+    // --- 핸들러 함수들 ---
     const toggleType = (type) => {
         setSelectedTypes(prev =>
             prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
         );
     };
 
-    // 좌석 규격 변경 적용
     const handleResize = () => {
         if (rows > 0 && cols > 0) {
             setLayout(createDefaultLayout(rows, cols));
         }
     };
 
-    // 좌석 클릭 시 현재 모드로 좌석 상태 변경
     const handleSeatClick = (y, x) => {
         const newLayout = layout.map(row => [...row]);
         newLayout[y][x] = mode;
         setLayout(newLayout);
     };
 
-    // --- 등록 핸들러 (API 명세에 맞게 수정) ---
-    const handleCreate = async () => {
+    const handleCreate = async (e) => {
+        e.preventDefault(); 
+
         const accessToken = user?.accessToken;
         if (!accessToken) {
             alert("로그인이 필요합니다.");
             return;
         }
 
-        // 유효성 검사 추가
         if (!number || isNaN(Number(number)) || Number(number) <= 0) {
             alert("유효한 상영관 번호를 입력해주세요.");
             return;
@@ -74,7 +72,6 @@ const CreateTheaterPage = () => {
             return;
         }
 
-        // 요청 본문(payload) 형식 수정
         const payload = {
             number: Number(number),
             name: name,
@@ -83,7 +80,6 @@ const CreateTheaterPage = () => {
         };
 
         try {
-            // 엔드포인트 수정
             const response = await fetch('/admin/theaters', { 
                 method: 'POST',
                 headers: {
@@ -99,35 +95,39 @@ const CreateTheaterPage = () => {
             }
             
             alert('성공적으로 등록되었습니다.');
-            navigate('/theaters'); 
+            navigate('/theaterList'); 
 
         } catch (err) {
             alert(err.message);
         }
     };
     
+    if (screenTypesLoading) {
+        return <div>로딩 중...</div>;
+    }
+
     return (
         <PageWrapper>
             <Navbar underline={true} />
             <Container>
-                <Title>새 상영관 등록</Title>
-                <EditContainer>
+                <FormContainer onSubmit={handleCreate}> 
+                    <Title>새 상영관 등록</Title>
                     <InfoEditSection>
-                        {/* 상영관 번호 입력 필드 추가 */}
                         <Section>
                             <Label>상영관 번호</Label>
-                            <Input type="number" value={number} placeholder="숫자를 입력하세요 (예: 1)" onChange={(e) => setNumber(e.target.value)} />
+                            <Input type="number" value={number} placeholder="숫자를 입력하세요 (예: 1)" onChange={(e) => setNumber(e.target.value)} required/>
                         </Section>
                         <Section>
                             <Label>상영관 이름</Label>
-                            <Input type="text" value={name} placeholder="예: 1관, C-Language관" onChange={(e) => setName(e.target.value)} />
+                            <Input type="text" value={name} placeholder="예: 1관, C-Language관" onChange={(e) => setName(e.target.value)} required/>
                         </Section>
                         <Section>
                             <Label>제공 유형</Label>
                             <ButtonGroup>
                                 {allScreenTypes.map((type) => (
-                                    <TypeButton key={type} selected={selectedTypes.includes(type)} onClick={() => toggleType(type)}>
-                                        {type}
+                                    // --- !! 수정된 부분: type="button" 추가 !! ---
+                                    <TypeButton key={type.type} type="button" selected={selectedTypes.includes(type.type)} onClick={() => toggleType(type.type)}>
+                                        {type.type}
                                     </TypeButton>
                                 ))}
                             </ButtonGroup>
@@ -138,7 +138,8 @@ const CreateTheaterPage = () => {
                                 <SeatStandardInput type="number" min="1" value={rows} onChange={(e) => setRows(Math.max(1, Number(e.target.value)))} />
                                 <span>x</span>
                                 <SeatStandardInput type="number" min="1" value={cols} onChange={(e) => setCols(Math.max(1, Number(e.target.value)))} />
-                                <ApplyButton onClick={handleResize}>크기 변경 적용</ApplyButton>
+                                {/* --- !! 수정된 부분: type="button" 추가 !! --- */}
+                                <ApplyButton type="button" onClick={handleResize}>크기 변경 적용</ApplyButton>
                             </ResizeContainer>
                         </Section>
                     </InfoEditSection>
@@ -147,9 +148,10 @@ const CreateTheaterPage = () => {
                         <ModeSelector>
                             <Label>좌석 편집 모드 (선택 후 좌석 클릭)</Label>
                             <ButtonGroup>
-                                <ModeButton selected={mode === "SEAT"} onClick={() => setMode("SEAT")}><SeatBoxPreview seatType="SEAT" />좌석</ModeButton>
-                                <ModeButton selected={mode === "AISLE"} onClick={() => setMode("AISLE")}><SeatBoxPreview seatType="AISLE" />통로</ModeButton>
-                                <ModeButton selected={mode === "UNAVAILABLE"} onClick={() => setMode("UNAVAILABLE")}><SeatBoxPreview seatType="UNAVAILABLE" />사용불가</ModeButton>
+                                {/* --- !! 수정된 부분: type="button" 추가 !! --- */}
+                                <ModeButton type="button" selected={mode === "SEAT"} onClick={() => setMode("SEAT")}><SeatBoxPreview seatType="SEAT" />좌석</ModeButton>
+                                <ModeButton type="button" selected={mode === "AISLE"} onClick={() => setMode("AISLE")}><SeatBoxPreview seatType="AISLE" />통로</ModeButton>
+                                <ModeButton type="button" selected={mode === "UNAVAILABLE"} onClick={() => setMode("UNAVAILABLE")}><SeatBoxPreview seatType="UNAVAILABLE" />사용불가</ModeButton>
                             </ButtonGroup>
                         </ModeSelector>
                         <Screen>SCREEN</Screen>
@@ -169,8 +171,8 @@ const CreateTheaterPage = () => {
                             })}
                         </SeatContainer>
                     </SeatEditSection>
-                </EditContainer>
-                <SubmitButton onClick={handleCreate}><FaPlus /> 상영관 등록</SubmitButton>
+                    <SubmitButton type="submit"><FaPlus /> 상영관 등록</SubmitButton>
+                </FormContainer>
             </Container>
         </PageWrapper>
     );
@@ -179,7 +181,7 @@ const CreateTheaterPage = () => {
 export default CreateTheaterPage;
 
 
-// --- STYLED COMPONENTS (이전과 동일) ---
+// --- STYLED COMPONENTS ---
 const primaryBlue = '#1E6DFF';
 const darkGray = '#343a40';
 const mediumGray = '#dee2e6';
@@ -187,65 +189,58 @@ const lightGray = '#f8f9fa';
 const screenGray = '#495057';
 const red = '#e03131';
 
+const GlobalStyle = createGlobalStyle`body, html { background-color: ${lightGray}; }`;
 const PageWrapper = styled.div`
   background-color: ${lightGray};
   min-height: 100vh;
   padding-bottom: 50px;
 `;
-
 const Container = styled.div`
   width: 85%;
   max-width: 1400px;
   margin: 40px auto;
 `;
-
 const Title = styled.h2`
   font-size: 28px;
   font-weight: 900;
   color: ${darkGray};
   margin-bottom: 30px;
 `;
-
-const EditContainer = styled.div`
+const FormContainer = styled.form`
   background-color: #fff;
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.07);
 `;
-
 const InfoEditSection = styled.div`
     border-bottom: 1px solid ${mediumGray};
     padding-bottom: 30px;
     margin-bottom: 30px;
 `;
-
 const Section = styled.div`
   margin-bottom: 24px;
 `;
-
 const Label = styled.h3`
   font-weight: 700;
   font-size: 18px;
   margin: 0 0 12px;
   color: ${darkGray};
 `;
-
 const Input = styled.input`
   height: 42px;
-  width: 300px;
+  width: 100%;
   padding: 0 16px;
   border: 1px solid ${mediumGray};
   border-radius: 8px;
   font-size: 16px;
+  box-sizing: border-box;
   &:focus { outline-color: ${primaryBlue}; }
 `;
-
 const ButtonGroup = styled.div`
   display: flex;
   flex-wrap: wrap; 
   gap: 10px;
 `;
-
 const TypeButton = styled.button`
   padding: 10px 20px;
   border: 1px solid ${({ selected }) => (selected ? primaryBlue : mediumGray)};
@@ -256,14 +251,12 @@ const TypeButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
 `;
-
 const ResizeContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
   span { font-weight: 700; }
 `;
-
 const SeatStandardInput = styled.input`
   width: 70px;
   height: 42px;
@@ -274,7 +267,6 @@ const SeatStandardInput = styled.input`
   font-size: 16px;
   &:focus { outline-color: ${primaryBlue}; }
 `;
-
 const ApplyButton = styled.button`
   padding: 0 20px;
   height: 42px;
@@ -285,18 +277,15 @@ const ApplyButton = styled.button`
   font-weight: 700;
   cursor: pointer;
 `;
-
 const SeatEditSection = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
 `;
-
 const ModeSelector = styled.div`
     width: 100%;
     margin-bottom: 30px;
 `;
-
 const ModeButton = styled.button`
   display: flex;
   align-items: center;
@@ -310,7 +299,6 @@ const ModeButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
 `;
-
 const SeatBoxPreview = styled.span`
   width: 20px;
   height: 18px;
@@ -323,7 +311,6 @@ const SeatBoxPreview = styled.span`
   border: ${({seatType}) => seatType === "AISLE" ? `2px dashed ${mediumGray}` : 'none' };
   box-sizing: border-box;
 `;
-
 const Screen = styled.div`
   width: 100%;
   max-width: 800px;
@@ -337,7 +324,6 @@ const Screen = styled.div`
   letter-spacing: 5px;
   border-radius: 6px;
 `;
-
 const SeatContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -347,14 +333,12 @@ const SeatContainer = styled.div`
   background-color: ${lightGray};
   border-radius: 8px;
 `;
-
 const SeatRow = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
 `;
-
 const RowLabel = styled.div`
   width: 30px;
   text-align: center;
@@ -362,7 +346,6 @@ const RowLabel = styled.div`
   font-weight: 700;
   color: #adb5bd;
 `;
-
 const SeatBox = styled.div`
   width: 30px;
   height: 26px;
@@ -384,13 +367,11 @@ const SeatBox = styled.div`
       transform: scale(1.1);
   }
 `;
-
 const SeatNumber = styled.span`
   font-size: 12px;
   font-weight: 500;
   color: ${darkGray};
 `;
-
 const SubmitButton = styled.button`
   display: flex;
   align-items: center;
