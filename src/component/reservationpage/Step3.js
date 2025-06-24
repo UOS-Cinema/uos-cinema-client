@@ -7,6 +7,8 @@ import { useScreenTypes } from '../../context/ScreenTypeContext';
 import { useCardCompanies } from '../../context/CardCompanyContext';
 import { useBanks } from '../../context/BankContext';
 import { UserContext } from '../../context/UserContext';
+// import { processPayment } from '../../api/paymentApi';
+// import { getCurrentPoints } from '../../api/pointApi';
 
 // 고객 유형 영문 -> 한글 변환 헬퍼
 const translateCustomerType = (type) => {
@@ -24,7 +26,7 @@ const translateCustomerType = (type) => {
 const Step3 = () => {
     // --- Context에서 데이터 가져오기 ---
     const { user } = useContext(UserContext);
-    const { screenType, counts } = useReservationState();
+    const { screenType, counts, reservationId, selectedSeats, screeningId, theaterId } = useReservationState();
     const { customerTypes } = useCustomerTypes();
     const { screenTypes } = useScreenTypes();
     const { cardCompanies } = useCardCompanies();
@@ -35,8 +37,9 @@ const Step3 = () => {
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [usedPoints, setUsedPoints] = useState(0);
     const [paymentDiscount, setPaymentDiscount] = useState(0);
-    const [availablePoints, setAvailablePoints] = useState(0); // 포인트 상태 추가
+    const [availablePoints, setAvailablePoints] = useState(0);
     const [pointsLoading, setPointsLoading] = useState(true);
+    const [paymentLoading, setPaymentLoading] = useState(false);
 
     // --- 포인트 정보 API 페칭 ---
     useEffect(() => {
@@ -53,7 +56,7 @@ const Step3 = () => {
                 });
                 if (!response.ok) throw new Error('포인트 정보를 불러오지 못했습니다.');
                 const responseData = await response.json();
-                setAvailablePoints(responseData.data?.points || 0);
+                setAvailablePoints(responseData.data || 0);
             } catch (err) {
                 console.error("Failed to fetch points:", err);
             } finally {
@@ -88,7 +91,7 @@ const Step3 = () => {
         let value = parseInt(e.target.value, 10) || 0;
         const maxPoints = originalPrice - paymentDiscount;
         if (value < 0) value = 0;
-        if (value > availablePoints) value = availablePoints; // API로 받은 포인트로 제한
+        if (value > availablePoints) value = availablePoints;
         if (value > maxPoints) value = maxPoints;
         setUsedPoints(value);
     };
@@ -104,6 +107,61 @@ const Step3 = () => {
         setPaymentDiscount(0);
     };
 
+    // --- 결제 처리 함수 ---
+    const handlePayment = async () => {
+        console.log('Payment attempt - reservationId:', reservationId);
+        console.log('Selected payment:', selectedPayment);
+        console.log('Selected tab:', selectedTab);
+        
+        if (!selectedPayment && selectedTab !== "transfer") {
+            alert('결제 수단을 선택해주세요.');
+            return;
+        }
+
+        if (!reservationId) {
+            console.error('No reservationId available');
+            alert('예매 정보가 없습니다. 다시 시도해주세요.');
+            return;
+        }
+
+        setPaymentLoading(true);
+        
+        try {
+            const paymentData = {
+                reservationId: reservationId,
+                customerCount: counts,
+                paymentMethod: selectedTab === "card" ? "CARD" : "BANK",
+                affiliateName: selectedPayment?.name || (selectedTab === "transfer" && banks.length > 0 ? banks[0].name : ""),
+                usedPoint: usedPoints
+            };
+
+            const response = await fetch('/payments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.accessToken}`
+                },
+                body: JSON.stringify(paymentData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '결제 처리에 실패했습니다.');
+            }
+
+            const responseData = await response.json();
+            alert('결제가 완료되었습니다!');
+            // 결제 완료 후 리다이렉트 또는 다음 단계로 이동
+            window.location.href = '/mypage?tab=tickets';
+                
+        } catch (error) {
+            console.error('Payment error:', error);
+            alert('결제 처리 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
     return (
         <Container>
             <PaymentOptionsSection>
@@ -116,7 +174,7 @@ const Step3 = () => {
                                 placeholder="0" 
                                 value={usedPoints === 0 ? '' : usedPoints}
                                 onChange={handlePointChange}
-                                disabled={pointsLoading} // 로딩 중 비활성화
+                                disabled={pointsLoading}
                              />
                             <span>P</span>
                         </InputWrapper>
@@ -132,7 +190,6 @@ const Step3 = () => {
                         <TabList>
                             <TabButton isSelected={selectedTab === "card"} onClick={() => handleTabChange("card")}>카드결제</TabButton>
                             <TabButton isSelected={selectedTab === "transfer"} onClick={() => handleTabChange("transfer")}>계좌이체</TabButton>
-                            {/* 등록된 결제수단 탭 제거 */}
                         </TabList>
                         <TabContent>
                             {selectedTab === 'card' && cardCompanies.map(p => (
@@ -154,7 +211,6 @@ const Step3 = () => {
                                      </div>
                                 </AccountInfo>
                             ))}
-                            {/* 등록된 결제수단 렌더링 로직 제거 */}
                         </TabContent>
                      </PaymentContainer>
                 </SectionBox>
@@ -162,6 +218,11 @@ const Step3 = () => {
             
             <SummarySection>
                 <SummaryTitle>최종 결제 정보</SummaryTitle>
+                {process.env.NODE_ENV === 'development' && (
+                    <DebugInfo>
+                        예매 ID: {reservationId || 'None'}
+                    </DebugInfo>
+                )}
                 <SummaryContent>
                     <InfoRow>
                         <InfoLabel>상품 금액</InfoLabel>
@@ -180,7 +241,9 @@ const Step3 = () => {
                     <FinalPriceLabel>총 결제금액</FinalPriceLabel>
                     <FinalPriceValue>{finalPrice.toLocaleString()}원</FinalPriceValue>
                 </FinalPriceRow>
-                <PayButton>결제하기</PayButton>
+                <PayButton onClick={handlePayment} disabled={paymentLoading}>
+                    {paymentLoading ? '결제 처리 중...' : '결제하기'}
+                </PayButton>
             </SummarySection>
         </Container>
     );
@@ -405,10 +468,27 @@ const PayButton = styled.button`
     cursor: pointer;
     transition: all 0.3s ease;
     
-    &:hover {
+    &:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(30, 109, 255, 0.3);
     }
+    
+    &:disabled {
+        background: #ced4da;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+`;
+
+const DebugInfo = styled.div`
+    background: #fffbf0;
+    border: 1px solid #ffd93d;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #856404;
 `;
 
 export default Step3;

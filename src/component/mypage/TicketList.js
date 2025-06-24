@@ -1,52 +1,158 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styled from "styled-components";
-// import { movies } from "../../example_data/movies"; // 실제 데이터 경로 확인
-
-// --- 목업 데이터 ---
-const movies = [
-    {id: 1, title: '기생충', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190528_36%2F1559024198386YVTEw_JPEG%2Fmovie_image.jpg', reservation_rate: 17.5, director: '봉준호', actors: '송강호, 이선균, 조여정', genres: ['드라마', '스릴러'], screen_types: ['2D'], release_date: '2019-05-30'},
-    {id: 2, title: '올드보이', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20111222_177%2F1324537084439rmrVk_JPEG%2Fmovie_image.jpg', reservation_rate: 14.6, director: '박찬욱', actors: '최민식, 유지태, 강혜정', genres: ['스릴러', '액션'], screen_types: ['2D', 'IMAX'], release_date: '2003-11-21'},
-    {id: 3, title: '부산행', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20200612_248%2F1591937633750Vvyr6_JPEG%2Fmovie_image.jpg', reservation_rate: 12.1, director: '연상호', actors: '공유, 정유미, 마동석', genres: ['액션', '공포'], screen_types: ['2D', '4DX'], release_date: '2016-07-20'},
-    {id: 4, title: '극한직업', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20190116_206%2F1547615429111dINWj_JPEG%2Fmovie_image.jpg', reservation_rate: 18.2, director: '이병헌', actors: '류승룡, 이하늬, 진선규', genres: ['코미디', '액션'], screen_types: ['2D'], release_date: '2019-01-23'},
-    {id: 5, title: '헤어질 결심', poster: 'https://search.pstatic.net/common?quality=75&direct=true&src=https%3A%2F%2Fmovie-phinf.pstatic.net%2F20220607_129%2F16545872892918GA4h_JPEG%2Fmovie_image.jpg', reservation_rate: 9.8, director: '박찬욱', actors: '박해일, 탕웨이', genres: ['로맨스', '드라마'], screen_types: ['2D'], release_date: '2022-06-29'},
-];
-// --- 목업 데이터 끝 ---
+import { UserContext } from "../../context/UserContext";
 
 const TicketList = () => {
-    const [subTab, setSubTab] = useState("upcoming");
+    const { user } = useContext(UserContext);
+    const [reservations, setReservations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
+    useEffect(() => {
+        fetchReservationHistory();
+    }, [currentPage]);
+
+    const fetchReservationHistory = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`/customers/reservations?page=${currentPage}&size=10`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Reservation response:', data); // 디버깅용
+            
+            setReservations(data.data.content);
+            setTotalPages(data.data.totalPages);
+        } catch (err) {
+            setError(err.message || '예매내역을 불러오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCancelReservation = async (reservationId) => {
+        if (!window.confirm('예매를 취소하시겠습니까?')) return;
+        
+        try {
+            const response = await fetch(`/reservations/${reservationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '예매 취소에 실패했습니다.');
+            }
+            
+            alert('예매가 취소되었습니다.');
+            fetchReservationHistory(); // 목록 새로고침
+        } catch (err) {
+            alert('예매 취소에 실패했습니다: ' + err.message);
+        }
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return '-';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '-';
+            return `${date.toLocaleDateString('ko-KR')} ${date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}`;
+        } catch {
+            return '-';
+        }
+    };
+
+    const isUpcoming = (screeningDate) => {
+        if (!screeningDate) return false;
+        try {
+            const date = new Date(screeningDate);
+            return !isNaN(date.getTime()) && date > new Date();
+        } catch {
+            return false;
+        }
+    };
+
+    if (loading) return <LoadingWrapper>로딩 중...</LoadingWrapper>;
+    if (error) return <ErrorWrapper>오류: {error}</ErrorWrapper>;
+
     return (
         <Wrapper>
             <Header>
                 <Title>MY 티켓</Title>
-                <SubTabContainer>
-                    <SubTab selected={subTab === "upcoming"} onClick={() => setSubTab("upcoming")}>
-                        상영예정 예매내역
-                    </SubTab>
-                    <SubTab selected={subTab === "all"} onClick={() => setSubTab("all")}>
-                        전체 예매내역
-                    </SubTab>
-                </SubTabContainer>
             </Header>
 
             <ListContainer>
-                {movies.map((movie) => (
-                    <Ticket key={movie.id}>
-                        <Poster src={movie.poster} alt={movie.title} />
-                        <TicketInfo>
-                            <h3>{movie.title}</h3>
-                            <InfoGrid>
-                                <span>관람등급</span> <p>{movie.class || "정보 없음"}</p>
-                                <span>상영관</span> <p>상영관1(2D)-E11, E12(성인1, 청소년1)</p>
-                                <span>상영시간</span> <p>13:30 ~ 15:25</p>
-                                <span>예매완료</span> <p>2019.06.15 17:30</p>
-                            </InfoGrid>
-                        </TicketInfo>
-                    </Ticket>
-                ))}
+                {reservations.length === 0 ? (
+                    <EmptyState>
+                        예매내역이 없습니다.
+                    </EmptyState>
+                ) : (
+                    reservations.map((reservation) => (
+                        <Ticket key={reservation.reservationId}>
+                            <TicketInfo>
+                                <TicketHeader>
+                                    <h3>{reservation.screening?.movieTitle || '영화 제목 없음'}</h3>
+                                    {isUpcoming(reservation.screening?.startTime) && reservation.status === 'CONFIRMED' && (
+                                        <CancelButton onClick={() => handleCancelReservation(reservation.reservationId)}>
+                                            예매취소
+                                        </CancelButton>
+                                    )}
+                                </TicketHeader>
+                                <InfoGrid>
+                                    <span>관람등급</span> <p>전체관람가</p>
+                                    <span>상영관</span> <p>{reservation.screening?.theaterName}({reservation.screening?.screenType}) - {reservation.seatNumbers?.join(', ')}</p>
+                                    <span>예매상태</span> <p>{getStatusText(reservation.status)}</p>
+                                </InfoGrid>
+                            </TicketInfo>
+                        </Ticket>
+                    ))
+                )}
             </ListContainer>
+            
+            {totalPages > 1 && (
+                <PaginationWrapper>
+                    <PaginationButton 
+                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                        disabled={currentPage === 0}
+                    >
+                        이전
+                    </PaginationButton>
+                    <PageInfo>{currentPage + 1} / {totalPages}</PageInfo>
+                    <PaginationButton 
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                        disabled={currentPage === totalPages - 1}
+                    >
+                        다음
+                    </PaginationButton>
+                </PaginationWrapper>
+            )}
         </Wrapper>
     )
 }
+
+const getStatusText = (status) => {
+    switch (status) {
+        case 'CONFIRMED': return '예매완료';
+        case 'CANCELLED': return '예매취소';
+        case 'PENDING': return '예매대기';
+        case 'COMPLETED': return '예매완료';
+        default: return status || '알 수 없음';
+    }
+};
+
 export default TicketList;
 
 // --- STYLED COMPONENTS ---
@@ -76,27 +182,6 @@ const Title = styled.h2`
   margin: 0;
 `;
 
-const SubTabContainer = styled.div`
-  display: flex;
-  gap: 10px;
-  background-color: #f1f3f5;
-  border-radius: 8px;
-  padding: 6px;
-`;
-
-const SubTab = styled.button`
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: 700;
-  background: ${({ selected }) => (selected ? "#fff" : "transparent")};
-  color: ${({ selected }) => (selected ? primaryBlue : textGray)};
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: ${({ selected }) => (selected ? "0 2px 4px rgba(0,0,0,0.1)" : "none")};
-`;
-
 const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -105,45 +190,107 @@ const ListContainer = styled.div`
 
 const Ticket = styled.div`
   display: flex;
+  gap: 24px;
   background: #fff;
   border: 1px solid ${mediumGray};
   padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  gap: 24px;
-`;
-
-const Poster = styled.img`
-  width: 120px;
-  height: 170px;
-  object-fit: cover;
-  border-radius: 8px;
 `;
 
 const TicketInfo = styled.div`
   flex: 1;
-  display: flex;
-  flex-direction: column;
+`;
 
+const TicketHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  
   h3 {
-    margin: 0 0 16px;
-    font-size: 22px;
+    margin: 0;
+    font-size: 20px;
     font-weight: 700;
+    color: ${darkGray};
+  }
+`;
+
+const CancelButton = styled.button`
+  padding: 8px 16px;
+  background: #e03131;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  &:hover {
+    background: #c92a2a;
   }
 `;
 
 const InfoGrid = styled.div`
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    gap: 8px 12px;
-    
-    span {
-        font-weight: 500;
-        color: ${textGray};
-    }
-    p {
-        margin: 0;
-        font-size: 15px;
-        color: ${darkGray};
-    }
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 10px;
+  
+  span {
+    font-weight: 500;
+    color: ${textGray};
+    font-size: 14px;
+  }
+  p {
+    margin: 0;
+    font-size: 15px;
+    color: ${darkGray};
+  }
+`;
+
+const LoadingWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+    color: ${textGray};
+`;
+
+const ErrorWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+    color: #e03131;
+`;
+
+const EmptyState = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+    color: ${textGray};
+`;
+
+const PaginationWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 32px;
+`;
+
+const PaginationButton = styled.button`
+    padding: 8px 16px;
+    background: ${({ disabled }) => disabled ? mediumGray : primaryBlue};
+    color: ${({ disabled }) => disabled ? textGray : 'white'};
+    border: none;
+    border-radius: 6px;
+    cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+    font-weight: 600;
+`;
+
+const PageInfo = styled.span`
+    font-weight: 600;
+    color: ${darkGray};
 `;

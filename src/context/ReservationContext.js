@@ -7,6 +7,7 @@ const initialState = {
     counts: {}, // 고객 유형에 따라 동적으로 채워질 빈 객체로 시작
     selectedSeats: [],
     screenType: null,
+    reservationId: null, // 예매 ID 추가
 };
 
 // 액션에 따라 상태를 어떻게 변경할지 정의하는 리듀서 함수
@@ -27,6 +28,9 @@ function reservationReducer(state, action) {
         case 'SET_SEATS':
             return { ...state, selectedSeats: action.payload };
         
+        case 'SET_RESERVATION_ID':
+            return { ...state, reservationId: action.payload };
+        
         case 'RESET_SELECTION':
             return {
                 ...state,
@@ -34,6 +38,7 @@ function reservationReducer(state, action) {
                 counts: initialState.counts,
                 selectedSeats: initialState.selectedSeats,
                 screenType: initialState.screenType,
+                reservationId: initialState.reservationId,
             };
         default:
             throw new Error(`Unhandled action type: ${action.type}`);

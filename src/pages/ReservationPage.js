@@ -8,14 +8,16 @@ import StepIndicator from '../component/reservationpage/StepIndicator';
 import Step1 from '../component/reservationpage/Step1';
 import Step2 from '../component/reservationpage/Step2';
 import Step3 from '../component/reservationpage/Step3';
-import { useReservationState } from '../context/ReservationContext';
-import { UserContext } from '../context/UserContext'; // UserContext 추가
+import { useReservationState, useReservationDispatch } from '../context/ReservationContext';
+import { UserContext } from '../context/UserContext';
+// import { createReservation } from '../api/reservationApi';
 
 function BookingPage() {
     // --- 상태 관리 ---
     const [step, setStep] = useState(1);
     // Context에서 예매 데이터 가져오기
     const { selectedScreening, counts, selectedSeats } = useReservationState();
+    const dispatch = useReservationDispatch();
     // Context에서 사용자 인증 정보 가져오기
     const { user } = useContext(UserContext);
     // 생성된 예약 정보를 저장할 상태
@@ -48,13 +50,13 @@ function BookingPage() {
             }
 
             // API 요청 본문(payload) 생성
-            const payload = {
+            const reservationData = {
                 screeningId: selectedScreening.id,
                 theaterId: selectedScreening.theaterId,
                 seatNumbers: selectedSeats,
                 customerCount: counts
             };
-            console.log(payload);
+
             try {
                 const response = await fetch('/reservations', {
                     method: 'POST',
@@ -62,7 +64,7 @@ function BookingPage() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${user.accessToken}`
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(reservationData)
                 });
 
                 if (!response.ok) {
@@ -71,10 +73,12 @@ function BookingPage() {
                 }
 
                 const responseData = await response.json();
-                setReservationInfo(responseData.data); // 서버로부터 받은 예약 정보 저장
+                // Context에 reservationId 저장
+                dispatch({ type: 'SET_RESERVATION_ID', payload: responseData.data });
+                setReservationInfo({ id: responseData.data, ...reservationData });
 
             } catch (err) {
-                alert(err.message);
+                alert(err.message || '예약 생성에 실패했습니다.');
                 console.error("Reservation failed:", err);
                 return; // 에러 발생 시 다음 단계로 진행하지 않음
             }
