@@ -44,6 +44,12 @@ const Step2 = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // 사용 가능한 좌석 수를 계산하는 함수
+    const calculateAvailableSeats = (layout) => {
+        if (!layout || !Array.isArray(layout)) return 0;
+        return layout.flat().filter(seat => seat === 'SEAT').length;
+    };
+
     useEffect(() => {
         if (!screeningId) {
             setError("상영 정보가 올바르지 않습니다.");
@@ -69,8 +75,13 @@ const Step2 = () => {
                 
                 const responseData = await response.json();
                 console.log(responseData.data);
-                setScreeningDetails(responseData.data);
-                setSeatLayout(responseData.data.seatingStatus);
+                // API는 좌석 레이아웃을 직접 반환합니다
+                setSeatLayout(responseData.data || []);
+                // 스크리닝 상세 정보는 별도 API에서 가져와야 할 수 있습니다
+                setScreeningDetails({ 
+                    seatingStatus: responseData.data || [],
+                    availableSeats: calculateAvailableSeats(responseData.data || [])
+                });
             } catch (err) {
                 setError(err.message);
                 console.error(err);
@@ -170,7 +181,7 @@ const Step2 = () => {
                         <Screen>SCREEN</Screen>
                         <SeatSelectionArea>
                             <SeatContainer>
-                                {seatLayout.map((row, y) => {
+                                {seatLayout && Array.isArray(seatLayout) && seatLayout.map((row, y) => {
                                     let seatNumber = 1;
                                     return (
                                         <SeatRow key={y}>
